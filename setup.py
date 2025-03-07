@@ -1,13 +1,13 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="nbuvg",
     version="0.1",
-    py_modules=["main"],  # Your module is 'main.py'
+    packages=find_packages(),  # Automatically find the package
     install_requires=["click"],
     entry_points={
         "console_scripts": [
-            "nbuvg=main:cli",  # This should point to the 'cli' function in 'main.py'
+            "nbuvg=nbuvg.main:cli",  # Use the correct package name
         ],
     },
 )
