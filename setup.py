@@ -3,11 +3,13 @@ from setuptools import setup, find_packages
 setup(
     name="nbuvg",
     version="0.1",
-    packages=find_packages(),  # Automatically find the package
+    py_modules=["cli"],
+    packages=find_packages(),  
     install_requires=["click"],
+    install_package_data=True,
     entry_points={
         "console_scripts": [
-            "nbuvg=nbuvg.main:cli",  # Use the correct package name
+            "nbuvg=cli:cli",
         ],
     },
 )
