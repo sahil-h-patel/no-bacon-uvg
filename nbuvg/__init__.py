@@ -1,0 +1,1 @@
+from nbuvg.main import cli
