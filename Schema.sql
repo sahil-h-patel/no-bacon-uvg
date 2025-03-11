@@ -120,3 +120,11 @@ CREATE TABLE collection_has_video_game(
     FOREIGN KEY (cid) REFERENCES collection(cid),
     FOREIGN KEY (vid) REFERENCES video_games(vid)
 );
+
+CREATE TABLE user_platform(
+    uid INT, 
+    pid INT, 
+    PRIMARY KEY (uid,pid),
+    FOREIGN KEY(uid) REFERENCES users(uid),
+    FOREIGN KEY(pid) REFERENCES platform(pid)
+);

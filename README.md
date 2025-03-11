@@ -50,6 +50,6 @@ This should be the general project structure, make sure `cli.py` and `setup.py` 
 pip install -e .
 ```
 
-This should set the nbuvg package in development mode which will hot-reload any new commands or packages.
+This should set the nbuvg package in development mode which will hot-reload any new commands or packages. *Use after every pull*
 
 
