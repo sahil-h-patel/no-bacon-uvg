@@ -19,4 +19,6 @@ def create_user(username, email):
     if not username and not email:
         username = click.prompt('Enter username')
         email = click.prompt('Enter email')
+    elif username and not email:
+        raise click.UsageError("Please use both arguments, username and email")
     click.echo(f'User created with username: {username} and email: {email}')

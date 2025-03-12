@@ -19,6 +19,8 @@ def add_game(game, collection):
     if not collection and not game:
         game = click.prompt('Enter game')
         collection = click.prompt('Enter collection')
+    elif game and not collection:
+        raise click.UsageError("Please use both arguments, game and collection")
     click.echo(f'Added {game} to {collection}')
 
 @games.command('delete')
@@ -32,7 +34,9 @@ def delete_game(game, collection):
         game          The game to delete
         collection    The collection the game will be deleted from
     """
-    if not collection and not game:
+    if not game and not collection:
         game = click.prompt('Enter game')
         collection = click.prompt('Enter collection')
+    elif game and not collection:
+        raise click.UsageError("Please use both arguments, game and collection")
     click.echo(f'Deleted {game} from {collection}')

@@ -42,7 +42,9 @@ def rename_collection(name, collection):
       old_name  The current name of the collection.
       new_name  The new name for the collection.
     """
-    if not collection and not name:
+    if not name and not collection:
         name = click.prompt('Enter new name')
         collection = click.prompt('Enter collection to rename')
+    elif name and not collection:
+        raise click.UsageError("Please use both arguments, name and collection")
     click.echo(f'Renamed collection {collection} to {name}')
