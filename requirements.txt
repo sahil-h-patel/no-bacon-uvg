@@ -1,4 +1,13 @@
+bcrypt==4.3.0
+cffi==1.17.1
 click==8.1.8
-git+https://github.com/sahil-h-patel/no-bacon-uvg.git@main#egg=nbuvg
+cryptography==44.0.2
+dotenv==0.9.9
+nbuvg@git+https://github.com/sahil-h-patel/no-bacon-uvg.git@main#egg=nbuvg
+paramiko==3.5.1
 psycopg2==2.9.10
+pycparser==2.22
+PyNaCl==1.5.0
+python-dotenv==1.0.1
 setuptools==75.8.2
+sshtunnel==0.4.0
