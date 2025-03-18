@@ -1,5 +1,5 @@
 CREATE TABLE users(
-    uid INT PRIMARY KEY,
+    uid SERIAL PRIMARY KEY,
     Username VARCHAR(64) not null,
     Password VARCHAR(64) not null,
     Firstname VARCHAR(64),
@@ -9,68 +9,68 @@ CREATE TABLE users(
 );
 
 CREATE TABLE user_email(
-    uid INT,
+    uid SERIAL,
     email VARCHAR(64),
     PRIMARY KEY(uid, email),
     FOREIGN KEY(uid) REFERENCES users(uid)
 );
 
 CREATE TABLE follows(
-    follower_uid INT,
-    followee_uid INT,
+    follower_uid SERIAL,
+    followee_uid SERIAL,
     PRIMARY KEY (followee_uid, follower_uid),
     FOREIGN KEY(follower_uid) REFERENCES users(uid),
     FOREIGN KEY(followee_uid) REFERENCES users(uid)
 );
 
 CREATE TABLE platform(
-    pid INT PRIMARY KEY,
+    pid SERIAL PRIMARY KEY,
     name VARCHAR(64) NOT NULL
 );
 
 CREATE TYPE ESRB_ratings AS ENUM('RP', 'RPM', 'E', 'E10', 'T', 'M', 'AO');
 CREATE TABLE video_games(
-    vid INT PRIMARY KEY,
+    vid SERIAL PRIMARY KEY,
     ESRB ESRB_ratings,
     Title VARCHAR(64) NOT NULL
 );
 
 CREATE TABLE genre(
-    gid INT PRIMARY KEY,
+    gid SERIAL PRIMARY KEY,
     genre VARCHAR(64)
 );
 
 CREATE TABLE video_game_genre(
-    vid int,
-    gid int,
+    vid SERIAL,
+    gid SERIAL,
     primary key(vid, gid),
     FOREIGN KEY(vid) REFERENCES video_games(vid),
     FOREIGN KEY(gid) REFERENCES genre(gid)
 );
 
 CREATE TABLE contributor(
-    dpid int primary key,
+    dpid SERIAL PRIMARY KEY ,
     name varchar(64)
 );
 
 CREATE TABLE video_game_publisher(
-    dpid INT,
-    vid INT,
+    dpid SERIAL,
+    vid SERIAL,
     PRIMARY KEY (dpid, vid),
     FOREIGN KEY (dpid) REFERENCES contributor(dpid),
     FOREIGN KEY (vid) REFERENCES video_games(vid)
 );
 CREATE TABLE video_game_developer(
-    dpid INT,
-    vid INT,
+    dpid SERIAL,
+    vid SERIAL,
     PRIMARY KEY (dpid, vid),
     FOREIGN KEY (dpid) REFERENCES contributor(dpid),
     FOREIGN KEY (vid) REFERENCES video_games(vid)
 );
 
 CREATE TABLE video_game_platforms(
-    pid INT,
-    vid INT,
+    pid SERIAL,
+    vid SERIAL,
     price decimal(4,2),
     release_date date,
     PRIMARY KEY (pid, vid),
@@ -81,8 +81,8 @@ CREATE TABLE video_game_platforms(
 
 CREATE TYPE rating_scale AS ENUM('1','2','3','4','5');
 CREATE TABLE user_rating(
-    uid INT,
-    vid INT,
+    uid SERIAL,
+    vid SERIAL,
     rating rating_scale,
     PRIMARY KEY (uid, vid, rating),
     FOREIGN KEY (uid) REFERENCES users(uid),
@@ -90,8 +90,8 @@ CREATE TABLE user_rating(
 );
 
 CREATE TABLE user_plays(
-    uid INT,
-    vid INT,
+    uid SERIAL,
+    vid SERIAL,
     start timestamp,
     end_time timestamp, -- end is a keyword and would be quoted but I didn't want to have that mess up queries so I changed the name
     PRIMARY KEY (uid, vid, start),
@@ -101,29 +101,29 @@ CREATE TABLE user_plays(
 );
 
 CREATE TABLE collection(
-    cid int PRIMARY KEY,
+    cid SERIAL PRIMARY KEY ,
     name VARCHAR(64)
 );
 
 CREATE TABLE user_has_collection(
-    uid INT,
-    cid INT,
+    uid SERIAL,
+    cid SERIAL,
     PRIMARY KEY (uid, cid),
     FOREIGN KEY (uid) REFERENCES users(uid),
     FOREIGN KEY (cid) REFERENCES collection(cid)
 );
 
 CREATE TABLE collection_has_video_game(
-    cid INT,
-    vid INT,
+    cid SERIAL,
+    vid SERIAL,
     PRIMARY KEY (cid, vid),
     FOREIGN KEY (cid) REFERENCES collection(cid),
     FOREIGN KEY (vid) REFERENCES video_games(vid)
 );
 
 CREATE TABLE user_platform(
-    uid INT, 
-    pid INT, 
+    uid SERIAL, 
+    pid SERIAL, 
     PRIMARY KEY (uid,pid),
     FOREIGN KEY(uid) REFERENCES users(uid),
     FOREIGN KEY(pid) REFERENCES platform(pid)

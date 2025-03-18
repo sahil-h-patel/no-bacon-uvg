@@ -1,0 +1,18 @@
+DROP TABLE users cascade;
+DROP TABLE collection cascade;
+DROP TABLE video_games cascade;
+DROP TABLE genre cascade;
+DROP TABLE contributor cascade;
+DROP TABLE follows cascade;
+DROP TABLE collection_has_video_game cascade ;
+DROP TABLE platform cascade ;
+DROP TABLE user_email cascade ;
+DROP TABLE user_plays cascade;
+DROP TABLE user_has_collection cascade;
+DROP TABLE user_platform cascade;
+DROP TABLE user_rating cascade;
+DROP TABLE video_game_developer cascade;
+DROP TABLE video_game_genre cascade;
+DROP TABLE video_game_platforms cascade;
+DROP TABLE video_game_publisher cascade;
+DROP TYPE ESRB_ratings;
