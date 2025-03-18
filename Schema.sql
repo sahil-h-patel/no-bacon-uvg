@@ -5,7 +5,7 @@ CREATE TABLE users(
     Firstname VARCHAR(64),
     Lastname VARCHAR(64),
     CreationDate date,
-    LastAccess date
+    LastAccess timestamp
 );
 
 CREATE TABLE user_email(
@@ -28,7 +28,7 @@ CREATE TABLE platform(
     name VARCHAR(64) NOT NULL
 );
 
-CREATE TYPE ESRB_ratings AS ENUM('Everyone','Everyone 10+','Teen','Mature 17+','Rating Pending - Likely Mature 17+', 'Rating Pending', 'Adults Only 18+');
+CREATE TYPE ESRB_ratings AS ENUM('RP', 'RPM', 'E', 'E10', 'T', 'M', 'AO');
 CREATE TABLE video_games(
     vid INT PRIMARY KEY,
     ESRB ESRB_ratings,
