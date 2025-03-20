@@ -2,12 +2,12 @@
     -- Login queries
         -- Validate username and password
 SELECT 
-    uid, Username, Password 
+    uid, username, password 
 FROM 
     users
 WHERE 
-    Username = '' -- Replace with the entered username
-    AND Password = ''; -- Replace with the entered password
+    username = '' -- Replace with the entered username
+    AND password = ''; -- Replace with the entered password
         -- Update last access 
 UPDATE 
     users
@@ -18,19 +18,19 @@ WHERE
         -- 
 
     -- get all users specific user follows
-select Username from users where uid in (
+select username from users where uid in (
     select follows.followee_uid from follows where follower_uid=*****INSERT-ID HERE******
     );
     -- Get number of people specific user follows
-select COUNT(Username) from users where uid in (
+select COUNT(username) from users where uid in (
     select follows.followee_uid from follows where follower_uid=*****INSERT-ID HERE******
     )
     -- get all users that follow specific user
-select Username from users where uid in (
+select username from users where uid in (
     select follows.follower_uid from follows where follower_uid=*****INSERT-ID HERE******
     );
     -- Get number of people specific user follows
-select COUNT(Username) from users where uid in (
+select COUNT(username) from users where uid in (
     select follows.follower_uid from follows where follower_uid=*****INSERT-ID HERE******
     ) 
 
@@ -40,9 +40,9 @@ INSERT INTO user_rating (uid, vid, rating)
  
 -- Get data about collection as per the document
     SELECT 
-    c.name AS Collection_Name,
-    COUNT(chvg.vid) AS Number_of_Video_Games,
-    COALESCE(SUM(EXTRACT(EPOCH FROM (up.end_time - up.start)) / 3600), 0) AS Total_Playtime_Hours
+    c.name AS collection_name,
+    COUNT(chvg.vid) AS number_of_video_games,
+    COALESCE(SUM(EXTRACT(EPOCH FROM (up.end_time - up.start)) / 3600), 0) AS total_playtime_hours
 FROM 
     collection c
 LEFT JOIN 
@@ -98,7 +98,7 @@ WHERE
 -- Searching for Video Game data -- this was Copilot, damn good for this ngl
 
 SELECT
-    vg.Title AS Video_Game_Name,
+    vg.Title AS video_game_name,
     p.name AS Platform_Name,
     d.name AS Developer_Name,
     pub.name AS Publisher_Name,

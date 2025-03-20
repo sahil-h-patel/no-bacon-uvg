@@ -4,16 +4,16 @@
 
 CREATE TABLE users(
     uid SERIAL PRIMARY KEY,
-    Username VARCHAR(64) not null,
-    Password VARCHAR(64) not null,
-    Firstname VARCHAR(64),
-    Lastname VARCHAR(64),
-    CreationDate date,
-    LastAccess timestamp
+    username VARCHAR(64) not null unique,
+    password VARCHAR(64) not null,
+    first_name VARCHAR(64),
+    last_name VARCHAR(64),
+    creation_date date,
+    last_access timestamp
 );
 
 -- Inserting test user data without UID
-INSERT INTO users (Username, Password, Firstname, Lastname, CreationDate, LastAccess)
+INSERT INTO users (Username, Password, first_name, last_name, creation_date, last_access)
 VALUES
   ('alice_wonder', 'passwordA1', 'Alice', 'Wonder', '2025-02-15', '2025-02-15 08:45:00'),
   ('bob_smith', 'passwordB2', 'Bob', 'Smith', '2025-01-20', '2025-01-20 09:30:00'),
@@ -93,15 +93,15 @@ VALUES
   ('Playstation 5');
 -- select * from platform;
 
-CREATE TYPE ESRB_ratings AS ENUM('RP', 'RPM', 'E', 'E10', 'T', 'M', 'AO');
+CREATE TYPE esrb_ratings AS ENUM('RP', 'RPM', 'E', 'E10', 'T', 'M', 'AO');
 CREATE TABLE video_games(
     vid SERIAL PRIMARY KEY,
-    ESRB ESRB_ratings,
-    Title VARCHAR(64) NOT NULL
+    esrb esrb_ratings,
+    title VARCHAR(64) NOT NULL
 );
 
 -- Inserting test video game data
-INSERT INTO video_games (ESRB, Title)
+INSERT INTO video_games (esrb, title)
 VALUES
   ('E', 'Super Mario Odyssey'),  -- Game rated "Everyone"
   ('T', 'Fortnite'),             -- Game rated "Teen"
@@ -145,7 +145,7 @@ VALUES
   (3, 7),  -- 'Grand Theft Auto V' is a Strategy game (vid = 3, gid = 7)
   (4, 1),  -- 'Minecraft' is an Action game (vid = 4, gid = 1)
   (5, 9);  -- 'Hot Coffee Mod' is a Puzzle game (vid = 5, gid = 9)
-  select * from video_game_genre;
+--   select * from video_game_genre;
 
 CREATE TABLE contributor(
     dpid SERIAL PRIMARY KEY ,
@@ -307,8 +307,8 @@ VALUES
 -- select * from collection_has_video_game;
 
 CREATE TABLE user_platform(
-    uid SERIAL, 
-    pid SERIAL, 
+    uid SERIAL,
+    pid SERIAL,
     PRIMARY KEY (uid,pid),
     FOREIGN KEY(uid) REFERENCES users(uid),
     FOREIGN KEY(pid) REFERENCES platform(pid)

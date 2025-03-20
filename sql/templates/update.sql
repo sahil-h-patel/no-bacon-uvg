@@ -1,84 +1,69 @@
--- users
+-- Update a user's username and password
 UPDATE users
-SET Username = '', Password = '', Firstname = '', Lastname = '', CreationDate = '', LastAccess = ''
+SET username = '', password = ''
 WHERE uid = '';
 
--- user_email
+-- Update a user's email address
 UPDATE user_email
 SET email = ''
 WHERE uid = '' AND email = '';
 
--- follows
+-- Update a follow relationship
 UPDATE follows
 SET follower_uid = '', followee_uid = ''
-WHERE follower_uid = '' AND followee_uid = '';
+WHERE followee_uid = '' AND follower_uid = '';
 
--- platform
+-- Update a platform name
 UPDATE platform
 SET name = ''
 WHERE pid = '';
 
--- video_games
+-- Update a video game's title and ESRB rating
 UPDATE video_games
-SET ESRB = '', Title = ''
+SET title = '', esrb = ''
 WHERE vid = '';
 
--- genre
+-- Update a genre name
 UPDATE genre
 SET genre = ''
 WHERE gid = '';
 
--- video_game_genre
-UPDATE video_game_genre
-SET vid = '', gid = ''
-WHERE vid = '' AND gid = '';
-
--- contributor
+-- Update a contributor's name
 UPDATE contributor
 SET name = ''
 WHERE dpid = '';
 
--- video_game_publisher
-UPDATE video_game_publisher
-SET dpid = '', vid = ''
-WHERE dpid = '' AND vid = '';
-
--- video_game_developer
-UPDATE video_game_developer
-SET dpid = '', vid = ''
-WHERE dpid = '' AND vid = '';
-
--- video_game_platforms
+-- Update a video game's price, release date, and platform
 UPDATE video_game_platforms
-SET pid = '', vid = '', price = '', release_date = ''
+SET price = '', release_date = ''
 WHERE pid = '' AND vid = '';
 
--- user_rating
+-- Update a user's rating for a video game
 UPDATE user_rating
-SET uid = '', vid = '', rating = ''
-WHERE uid = '' AND vid = '' AND rating = '';
+SET rating = ''
+WHERE uid = '' AND vid = '';
 
--- user_plays
+-- Update a user's play session start and end times
 UPDATE user_plays
 SET start = '', end_time = ''
 WHERE uid = '' AND vid = '' AND start = '';
 
--- collection
+-- Update a collection's name
 UPDATE collection
 SET name = ''
 WHERE cid = '';
 
--- user_has_collection
+-- Update the relationship between a user and a collection
 UPDATE user_has_collection
-SET uid = '', cid = ''
+SET cid = ''
 WHERE uid = '' AND cid = '';
 
--- collection_has_video_game
+-- Update the relationship between a collection and a video game
 UPDATE collection_has_video_game
-SET cid = '', vid = ''
+SET vid = ''
 WHERE cid = '' AND vid = '';
 
--- user_platform
+-- Update the relationship between a user and a platform
 UPDATE user_platform
-SET uid = '', pid = ''
+SET pid = ''
 WHERE uid = '' AND pid = '';

@@ -2,12 +2,12 @@
 
 CREATE TABLE users(
     uid SERIAL PRIMARY KEY,
-    Username VARCHAR(64) not null,
-    Password VARCHAR(64) not null,
-    Firstname VARCHAR(64),
-    Lastname VARCHAR(64),
-    CreationDate date,
-    LastAccess timestamp
+    username VARCHAR(64) not null unique,
+    password VARCHAR(64) not null,
+    first_name VARCHAR(64),
+    last_name VARCHAR(64),
+    creation_date date,
+    last_access timestamp
 );
 
 CREATE TABLE user_email(
@@ -30,11 +30,11 @@ CREATE TABLE platform(
     name VARCHAR(64) NOT NULL
 );
 
-CREATE TYPE ESRB_ratings AS ENUM('RP', 'RPM', 'E', 'E10', 'T', 'M', 'AO');
+CREATE TYPE esrb_ratings AS ENUM('RP', 'RPM', 'E', 'E10', 'T', 'M', 'AO');
 CREATE TABLE video_games(
     vid SERIAL PRIMARY KEY,
-    ESRB ESRB_ratings,
-    Title VARCHAR(64) NOT NULL
+    esrb esrb_ratings,
+    title VARCHAR(64) NOT NULL
 );
 
 CREATE TABLE genre(
@@ -62,6 +62,7 @@ CREATE TABLE video_game_publisher(
     FOREIGN KEY (dpid) REFERENCES contributor(dpid),
     FOREIGN KEY (vid) REFERENCES video_games(vid)
 );
+
 CREATE TABLE video_game_developer(
     dpid SERIAL,
     vid SERIAL,
