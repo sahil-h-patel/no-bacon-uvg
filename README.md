@@ -22,7 +22,7 @@ def mycommand(conn: psycopg.Connection, args: list[str]):
 from .mycommand import mycommand
 ```
 
-4. Finally, add the function to the commands dictionary
+4. Finally, add the function to the commands dictionary at the top of `cli.py`
 
 ``` python
 CMDS: dict[str, Callable[[psycopg.Connection, list[str]], None]] = {
