@@ -12,7 +12,7 @@ WHERE
 UPDATE 
     users
 SET 
-    LastAccess = CURRENT_TIMESTAMP
+    LastAccess = cURRENT_TIMESTAMP
 WHERE 
     uid = ''; -- Replace with the user's unique ID (retrieved from the first query)
         -- 
@@ -80,7 +80,7 @@ VALUES ('', ''); -- Replace '' with the collection's ID and the video game's ID.
 
 -- Searching for user based on email
 SELECT 
-    u.uid AS User_ID,
+    u.uid AS user_iD,
     u.Username,
     u.Firstname,
     u.Lastname,
@@ -99,14 +99,14 @@ WHERE
 
 SELECT
     vg.Title AS video_game_name,
-    p.name AS Platform_Name,
-    d.name AS Developer_Name,
-    pub.name AS Publisher_Name,
+    p.name AS platform_name,
+    d.name AS developer_name,
+    pub.name AS publisher_name,
     vg_platform.price AS Price,
-    vg_platform.release_date AS Release_Date,
-    vg.ESRB AS Age_Rating,
-    ur.rating AS User_Rating,
-    AVG(EXTRACT(EPOCH FROM (up.end_time - up.start)) / 3600) AS Average_Playtime_Hours
+    vg_platform.release_date AS release_date,
+    vg.ESRB AS age_rating,
+    ur.rating AS user_rating,
+    AVG(EXTRACT(EPOCH FROM (up.end_time - up.start)) / 3600) AS average_playtime_hours
 FROM
     video_games vg
 JOIN
