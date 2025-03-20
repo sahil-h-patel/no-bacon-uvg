@@ -1,4 +1,22 @@
 -- User Data
+    -- Login queries
+        -- Validate username and password
+SELECT 
+    uid, Username, Password 
+FROM 
+    users
+WHERE 
+    Username = '' -- Replace with the entered username
+    AND Password = ''; -- Replace with the entered password
+        -- Update last access 
+UPDATE 
+    users
+SET 
+    LastAccess = CURRENT_TIMESTAMP
+WHERE 
+    uid = ''; -- Replace with the user's unique ID (retrieved from the first query)
+        -- 
+
     -- get all users specific user follows
 select Username from users where uid in (
     select follows.followee_uid from follows where follower_uid=*****INSERT-ID HERE******
