@@ -5,6 +5,33 @@ python3 -m venv venv
 pip install -r requirements.txt
 ```
 
+## Adding Commands
+
+1. Create your command file `commands/` (`commands/mycommand.py`)
+2. Create your command function(s). Here's an example:
+
+``` python
+def mycommand(conn: psycopg.Connection, args: list[str]):
+    print(f"args: {args}")
+    print(f"conn: {conn}")
+```
+
+3. Then export the function(s) in `commands/__init__.py`
+
+``` python
+from .mycommand import mycommand
+```
+
+4. Finally, add the function to the commands dictionary
+
+``` python
+CMDS: dict[str, Callable[[psycopg.Connection, list[str]], None]] = {
+    # ...
+    "mycommand": mycommand
+    # ...
+}
+```
+
 ## Connecting to the Database:
 
 Make sure you have the `.env` file setup accordingly:
