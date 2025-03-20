@@ -7,12 +7,13 @@ import os
 import sshtunnel as ssh
 import atexit
 
-from commands import example, login
+from commands import example, login, logout
 
 PROMPT = "nbuvg> "
 CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]] = {
     "example": example,
-    "login": login
+    "login": login,
+    "logout": logout
 }
 CONTEXT: dict[str, Any] = {}
 

@@ -1,2 +1,2 @@
 from .example import example
-from .login import login
+from .login import login, logout
