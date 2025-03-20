@@ -1,3 +1,5 @@
+-- Raw meaning there is no test data
+
 CREATE TABLE users(
     uid SERIAL PRIMARY KEY,
     Username VARCHAR(64) not null,
