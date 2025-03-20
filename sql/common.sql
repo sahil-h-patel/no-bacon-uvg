@@ -130,7 +130,7 @@ LEFT JOIN
 LEFT JOIN
     genre g ON vg_genre.gid = g.gid
 WHERE
-    vg.Title ILIKE 'Super Mario Odyssey' -- Replace 'game_name' with the desired title or partial title
+    vg.Title ILIKE '%game_name%' -- Replace 'game_name' with the desired title or partial title
     AND p.name ILIKE '%platform_name%' -- Replace 'platform_name' with the desired platform
     AND vg_platform.release_date >= 'start_date' -- Replace with the start date
     AND vg_platform.release_date <= 'end_date' -- Replace with the end date
