@@ -1,9 +1,21 @@
 -- User Data
     -- get all users specific user follows
-select Username, COUNT(Username) from users where uid in (
+select Username from users where uid in (
     select follows.followee_uid from follows where follower_uid=*****INSERT-ID HERE******
+    );
+    -- Get number of people specific user follows
+select COUNT(Username) from users where uid in (
+    select follows.followee_uid from follows where follower_uid=*****INSERT-ID HERE******
+    )
+    -- get all users that follow specific user
+select Username from users where uid in (
+    select follows.follower_uid from follows where follower_uid=*****INSERT-ID HERE******
+    );
+    -- Get number of people specific user follows
+select COUNT(Username) from users where uid in (
+    select follows.follower_uid from follows where follower_uid=*****INSERT-ID HERE******
     ) 
-    group by Username;
+
 
 -- Video Game Data
 
@@ -12,6 +24,3 @@ select Username, COUNT(Username) from users where uid in (
 -- Platform Data
 
 -- Genre Data
-
-    -- Average Rating based on Genre
-    -- SELECT (v.title, v.ESRB, g.genre) from video_games as v left join 
