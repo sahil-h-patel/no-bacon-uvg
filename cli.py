@@ -9,7 +9,7 @@ import atexit
 from commands import example
 
 PROMPT = "nbuvg> "
-CMDS: dict[str, Callable[[psycopg.Connection], None]] = {
+CMDS: dict[str, Callable[[psycopg.Connection, list[str]], None]] = {
     "example": example
 }
 
@@ -67,12 +67,14 @@ def main():
 
     prompt()
     for cmd in stdin:
-        cmd = cmd.strip()
+        args = cmd.strip().split(" ")
+        cmd = args[0]
+        del args[0]
+
         if cmd == "exit":
             break
-
         if cmd in CMDS:
-            CMDS[cmd](db_conn)
+            CMDS[cmd](db_conn, args)
         else:
             print("Command not found :(")
 
