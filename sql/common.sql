@@ -1,4 +1,9 @@
 -- User Data
+    -- get all users specific user follows
+select Username, COUNT(Username) from users where uid in (
+    select follows.followee_uid from follows where follower_uid=*****INSERT-ID HERE******
+    ) 
+    group by Username;
 
 -- Video Game Data
 
