@@ -13,7 +13,11 @@ PROMPT = "nbuvg> "
 CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]] = {
     "example": example,
     "login": login,
-    "logout": logout
+    "logout": logout,
+    "create_collection": create_collection,
+    "add_to_collection": add_to_collection,
+    "remove_from_collection": remove_from_collection,
+    "delete_collection":delete_collection,
 }
 CONTEXT: dict[str, Any] = {}
 
