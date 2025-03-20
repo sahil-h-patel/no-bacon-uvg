@@ -8,11 +8,16 @@ pip install -r requirements.txt
 ## Adding Commands
 
 1. Create your command file `commands/` (`commands/mycommand.py`)
+
 2. Create your command function(s). Here's an example:
 
 ``` python
-def mycommand(conn: psycopg.Connection, args: list[str]):
+import psycopg
+from typing import Any
+
+def mycommand(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     print(f"args: {args}")
+    print(f"ctx: {ctx}")
     print(f"conn: {conn}")
 ```
 

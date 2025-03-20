@@ -1,6 +1,7 @@
 from sys import stdin, stdout
 from dotenv import load_dotenv
 from collections.abc import Callable
+from typing import Any
 import psycopg
 import os
 import sshtunnel as ssh
@@ -9,9 +10,10 @@ import atexit
 from commands import example
 
 PROMPT = "nbuvg> "
-CMDS: dict[str, Callable[[psycopg.Connection, list[str]], None]] = {
+CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]] = {
     "example": example
 }
+CONTEXT: dict[str, Any] = {}
 
 db_conn: psycopg.Connection | None = None
 tunnel: ssh.SSHTunnelForwarder | None = None
@@ -74,7 +76,7 @@ def main():
         if cmd == "exit":
             break
         if cmd in CMDS:
-            CMDS[cmd](db_conn, args)
+            CMDS[cmd](db_conn, args, CONTEXT)
         else:
             print("Command not found :(")
 
