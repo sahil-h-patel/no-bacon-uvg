@@ -5,7 +5,7 @@ setup(
     version="0.1",
     py_modules=["cli"],
     packages=find_packages(),  
-    install_requires=["click"],
+    install_requires=[],
     install_package_data=True,
     entry_points={
         "console_scripts": [

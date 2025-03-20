@@ -1,22 +1,92 @@
-import click
+from sys import stdin, stdout
+from dotenv import load_dotenv
+from collections.abc import Callable
+import psycopg
+import os
+import sshtunnel as ssh
+import atexit
 
-from commands.users import users
-from commands.collections import collections
-from commands.games import games
-from commands.follow import follow
-from commands.database import db
+from commands import example
 
-@click.group()
-def cli():
-    """No Bacon Unlimited Video Games - Video Game Collection Manager"""
-    pass
+PROMPT = "nbuvg> "
+CMDS: dict[str, Callable[[psycopg.Connection], None]] = {
+    "example": example
+}
 
-# Register command groups
-cli.add_command(users, name="user")
-cli.add_command(collections, name="collection")
-cli.add_command(games, name="game")
-cli.add_command(follow)
-cli.add_command(db)
+db_conn: psycopg.Connection | None = None
+tunnel: ssh.SSHTunnelForwarder | None = None
 
-if __name__ == "__main__":
-    cli()
+def prompt():
+    stdout.write(PROMPT)
+    stdout.flush()
+
+def setup_db_conn():
+    ssh_host = os.getenv('SSH_HOST')
+    ssh_user = os.getenv('SSH_USER')
+    ssh_password = os.getenv('SSH_PASSWORD')
+    db_name = os.getenv('DB_NAME')
+    db_host = os.getenv('DB_HOST')
+    db_port = int(os.getenv('DB_PORT'))
+    db_user = os.getenv('DB_USER')
+    db_password = os.getenv('DB_PASSWORD')
+
+    global tunnel
+    global db_conn
+
+    tunnel = ssh.open_tunnel(
+        (ssh_host, 22),  # SSH host and port
+        ssh_username=ssh_user,
+        ssh_password=ssh_password,  # Or use password authentication if needed
+        # Remote database bind address and port
+        remote_bind_address=(db_host, db_port)
+    )
+    tunnel.start()
+    print("Successfully established a ssh tunnel")
+    db_conn = psycopg.connect(
+        f"host={db_host} port={tunnel.local_bind_port} dbname={db_name} user={db_user} password={db_password}"
+    )
+    print("Successfully connected to the database!")
+
+    with db_conn.cursor() as cur:
+        cur.execute("SELECT * FROM users")
+        version = cur.fetchone()
+        print(f'Rows:{version}')
+
+def main():
+    # Load .env
+    if not load_dotenv('.env'):
+        print("Failed to load .env\nCheck README.md for format")
+        return
+
+    # Setup connections
+    setup_db_conn()
+
+    if not db_conn or not tunnel:
+        print("Failed to establish connection with DB")
+        return
+
+    prompt()
+    for cmd in stdin:
+        cmd = cmd.strip()
+        if cmd == "exit":
+            break
+
+        if cmd in CMDS:
+            CMDS[cmd](db_conn)
+        else:
+            print("Command not found :(")
+
+        prompt()
+
+
+def exit_handler():
+    print("Shutting down the database connection...")
+    if db_conn:
+        db_conn.close()
+    print("Shutting down the ssh tunnel...")
+    if tunnel:
+        tunnel.close()
+
+if __name__ == '__main__':
+    atexit.register(exit_handler)
+    main()
