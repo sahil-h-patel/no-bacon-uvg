@@ -1,4 +1,4 @@
 from .example import example
-from .login import login, logout
+from .account import login, logout, create_account
 from .play import play
 from .follow import follow, unfollow

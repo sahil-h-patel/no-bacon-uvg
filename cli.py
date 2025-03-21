@@ -7,7 +7,7 @@ import os
 import sshtunnel as ssh
 import atexit
 
-from commands import example, follow, login, logout, play, unfollow
+from commands import example, follow, login, logout, play, unfollow, create_account
 
 PROMPT = "nbuvg> "
 CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]] = {
@@ -17,6 +17,7 @@ CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]]
     "play": play,
     "follow": follow,
     "unfollow": unfollow
+    "create_account": create_account
 }
 
 CONTEXT: dict[str, Any] = {}
