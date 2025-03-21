@@ -7,7 +7,22 @@ import os
 import sshtunnel as ssh
 import atexit
 
-from commands import example, login, logout
+from commands import (
+    example, 
+    follow, 
+    login, 
+    logout, 
+    play, 
+    unfollow, 
+    create_account,
+    count_collections, 
+    create_collection, 
+    show_collections, 
+    add_to_collection, 
+    delete_collection, 
+    rename_collection, 
+    remove_from_collection
+)
 
 PROMPT = "nbuvg> "
 CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]] = {
@@ -18,15 +33,26 @@ CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]]
     "add_to_collection": add_to_collection,
     "remove_from_collection": remove_from_collection,
     "delete_collection":delete_collection,
+    "logout": logout,
+    "play": play,
+    "follow": follow,
+    "unfollow": unfollow,
+    "create_account": create_account,
+    "count_collections": count_collections,
+    "show_collections": show_collections,
+    "rename_collections": rename_collection
 }
+
 CONTEXT: dict[str, Any] = {}
 
 db_conn: psycopg.Connection | None = None
 tunnel: ssh.SSHTunnelForwarder | None = None
 
+
 def prompt():
     stdout.write(PROMPT)
     stdout.flush()
+
 
 def setup_db_conn():
     ssh_host = os.getenv('SSH_HOST')
@@ -51,7 +77,8 @@ def setup_db_conn():
     tunnel.start()
     print("Successfully established a ssh tunnel")
     db_conn = psycopg.connect(
-        f"host={db_host} port={tunnel.local_bind_port} dbname={db_name} user={db_user} password={db_password}"
+        f"host={db_host} port={tunnel.local_bind_port} dbname={
+            db_name} user={db_user} password={db_password}"
     )
     print("Successfully connected to the database!")
 
@@ -59,6 +86,7 @@ def setup_db_conn():
         cur.execute("SELECT * FROM users")
         version = cur.fetchone()
         print(f'Rows:{version}')
+
 
 def main():
     # Load .env
@@ -96,6 +124,7 @@ def exit_handler():
     print("Shutting down the ssh tunnel...")
     if tunnel:
         tunnel.close()
+
 
 if __name__ == '__main__':
     atexit.register(exit_handler)
