@@ -4,7 +4,7 @@ from typing import Any
 def follow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     print(args)
     if (len(args) != 1):
-        print("usage: login [username]")
+        print("usage: follow [username]")
         return
 
     with conn.cursor() as cur:
