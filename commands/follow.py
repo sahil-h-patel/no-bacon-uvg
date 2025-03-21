@@ -1,8 +1,6 @@
 import psycopg
 from typing import Any
 
-
-
 def follow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
 
     '''
@@ -18,25 +16,25 @@ def follow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
         None
     '''
     
-    if (len(args) != 1):
-        print("usage: follow [username]")
+    if len(args) != 1:
+        print("usage: follow [email]")
         return
-    if (len(ctx)==0):
+    if len(ctx) == 0:
         print("must be logged in to use this command")
         return
 
     with conn.cursor() as cur:
         cur.execute('''
             SELECT 
-                uid, username 
+                uid 
             FROM 
-                users
+                user_email
             WHERE 
-                username = '%s';
-                '''% (args[0]))
+                email = %s;
+            ''', (args[0],))
         followee = cur.fetchone()
         if not followee:
-            print("user not found")
+            print("email not found")
             return
         
         cur.execute('''
@@ -45,9 +43,9 @@ def follow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
             FROM 
                 follows
             WHERE 
-                follower_uid = '%s'
-                AND followee_uid = '%s';
-            '''% (ctx['uid'], followee[0]))
+                follower_uid = %s
+                AND followee_uid = %s;
+            ''', (ctx['uid'], followee[0]))
         check = cur.fetchone()
         if check:
             print("you already follow this person (creep)")
@@ -57,12 +55,10 @@ def follow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
             INSERT INTO 
                 follows (follower_uid, followee_uid) 
             VALUES 
-                ('%s', '%s')
-            '''% (ctx['uid'], followee[0]))
+                (%s, %s)
+            ''', (ctx['uid'], followee[0]))
     conn.commit()
     print("User followed")
-
-
 
 def unfollow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
 
@@ -80,20 +76,23 @@ def unfollow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     '''
 
     if len(args) != 1:
-        print("usage: unfollow [username]")
+        print("usage: unfollow [email]")
+    if len(ctx) == 0:
+        print("must be logged in to use this command")
+        return
 
     with conn.cursor() as cur:
         cur.execute('''
             SELECT 
-                uid, username 
+                uid 
             FROM 
-                users
+                user_email
             WHERE 
-                username = '%s';
-        '''% (args[0]))
+                email = %s;
+            ''', (args[0],))
         followee = cur.fetchone()
         if not followee:
-            print("user not found")
+            print("email not found")
             return
         
         cur.execute('''
@@ -102,9 +101,9 @@ def unfollow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
             FROM 
                 follows
             WHERE 
-                follower_uid = '%s'
-                AND followee_uid = '%s';
-        '''% (ctx['uid'], followee[0]))
+                follower_uid = %s
+                AND followee_uid = %s;
+        ''', (ctx['uid'], followee[0]))
         check = cur.fetchone()
         if not check:
             print("you do not follow this person")
