@@ -7,22 +7,25 @@ import os
 import sshtunnel as ssh
 import atexit
 
-from commands import example, login, logout
+from commands import example, login, logout,  play
 
 PROMPT = "nbuvg> "
 CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]] = {
     "example": example,
     "login": login,
-    "logout": logout
+    "logout": logout,
+    "play": play
 }
 CONTEXT: dict[str, Any] = {}
 
 db_conn: psycopg.Connection | None = None
 tunnel: ssh.SSHTunnelForwarder | None = None
 
+
 def prompt():
     stdout.write(PROMPT)
     stdout.flush()
+
 
 def setup_db_conn():
     ssh_host = os.getenv('SSH_HOST')
@@ -47,7 +50,8 @@ def setup_db_conn():
     tunnel.start()
     print("Successfully established a ssh tunnel")
     db_conn = psycopg.connect(
-        f"host={db_host} port={tunnel.local_bind_port} dbname={db_name} user={db_user} password={db_password}"
+        f"host={db_host} port={tunnel.local_bind_port} dbname={
+            db_name} user={db_user} password={db_password}"
     )
     print("Successfully connected to the database!")
 
@@ -55,6 +59,7 @@ def setup_db_conn():
         cur.execute("SELECT * FROM users")
         version = cur.fetchone()
         print(f'Rows:{version}')
+
 
 def main():
     # Load .env
@@ -92,6 +97,7 @@ def exit_handler():
     print("Shutting down the ssh tunnel...")
     if tunnel:
         tunnel.close()
+
 
 if __name__ == '__main__':
     atexit.register(exit_handler)
