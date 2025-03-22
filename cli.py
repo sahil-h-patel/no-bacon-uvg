@@ -7,7 +7,7 @@ import os
 import sshtunnel as ssh
 import atexit
 
-from commands import example, follow, login, logout, play, unfollow, create_account
+from commands import example, follow, login, logout, play, play_random, rate, unfollow, create_account
 
 PROMPT = "nbuvg> "
 CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]] = {
@@ -15,9 +15,11 @@ CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]]
     "login": login,
     "logout": logout,
     "play": play,
+    "play_random": play_random,
+    "rate": rate,
     "follow": follow,
-    "unfollow": unfollow
-    "create_account": create_account
+    "unfollow": unfollow,
+    "create_account": create_account,
 }
 
 CONTEXT: dict[str, Any] = {}
@@ -87,6 +89,7 @@ def main():
         if cmd == "exit":
             break
         if cmd in CMDS:
+            db_conn.rollback()
             CMDS[cmd](db_conn, args, CONTEXT)
         else:
             print("Command not found :(")
