@@ -8,6 +8,20 @@ from typing import Any
 #         version = cur.fetchone()
 #         print(f'Rows:{version}')
 
+def collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
+    print(f"args: {args}")
+    print(f"ctx: {ctx}")
+    if args[1] == "create":
+        create_collection(conn, args[2::], ctx)
+    elif args[1] == "delete":
+        delete_collection(conn, args[2::],  ctx)
+    elif args[1] == "add":
+        add_to_collection(conn, args[2::], ctx)
+    elif args[1] == "remove":
+        remove_from_collection(conn, args[2::], ctx)
+    else: 
+        return None
+
 def create_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     print(f"args: {args}")
     print(f"ctx: {ctx}")
