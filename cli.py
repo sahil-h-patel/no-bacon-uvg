@@ -16,13 +16,6 @@ from commands import (
     unfollow, 
     create_account,
     collection,
-    # count_collections, 
-    # create_collection, 
-    # show_collections, 
-    # add_to_collection, 
-    # delete_collection, 
-    # rename_collection, 
-    # remove_from_collection
 )
 
 PROMPT = "nbuvg> "
@@ -30,8 +23,13 @@ CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]]
     "example": example,
     "login": login,
     "logout": logout,
-    "create_account": create_account,
     "collection":collection,
+    "play": play,
+    "play_random": play_random,
+    "rate": rate,
+    "follow": follow,
+    "unfollow": unfollow,
+    "create_account": create_account,
 }
 
 CONTEXT: dict[str, Any] = {}
@@ -101,6 +99,7 @@ def main():
         if cmd == "exit":
             break
         if cmd in CMDS:
+            db_conn.rollback()
             CMDS[cmd](db_conn, args, CONTEXT)
         else:
             print("Command not found :(")
