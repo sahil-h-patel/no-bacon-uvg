@@ -31,18 +31,6 @@ CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]]
     "login": login,
     "logout": logout,
     "collection":collection,
-    "create_collection": create_collection,
-    "add_to_collection": add_to_collection,
-    "remove_from_collection": remove_from_collection,
-    "delete_collection":delete_collection,
-    "logout": logout,
-    "play": play,
-    "follow": follow,
-    "unfollow": unfollow,
-    "create_account": create_account,
-    "count_collections": count_collections,
-    "show_collections": show_collections,
-    "rename_collections": rename_collection
 }
 
 CONTEXT: dict[str, Any] = {}
