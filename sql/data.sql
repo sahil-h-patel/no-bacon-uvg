@@ -126,11 +126,11 @@ VALUES
 -- Inserting test user rating data
 INSERT INTO user_rating (uid, vid, rating)
 VALUES
-  (1, 1, '5'),  -- User 1 (Alice) rates 'Super Mario Odyssey' 5 stars
-  (2, 2, '4'),  -- User 2 (Bob) rates 'Fortnite' 4 stars
-  (3, 3, '3'),  -- User 3 (Charlie) rates 'Grand Theft Auto V' 3 stars
-  (4, 4, '5'),  -- User 4 (David) rates 'Minecraft' 5 stars
-  (5, 5, '2');  -- User 5 (Emily) rates 'Hot Coffee Mod' 2 stars
+  (1, 1, 5),  -- User 1 (Alice) rates 'Super Mario Odyssey' 5 stars
+  (2, 2, 4),  -- User 2 (Bob) rates 'Fortnite' 4 stars
+  (3, 3, 3),  -- User 3 (Charlie) rates 'Grand Theft Auto V' 3 stars
+  (4, 4, 5),  -- User 4 (David) rates 'Minecraft' 5 stars
+  (5, 5, 2);  -- User 5 (Emily) rates 'Hot Coffee Mod' 2 stars
 
 -- Inserting test user play data
 INSERT INTO user_plays (uid, vid, start_time, end_time)

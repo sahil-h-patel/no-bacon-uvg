@@ -82,11 +82,10 @@ CREATE TABLE video_game_platforms(
 
 );
 
-CREATE TYPE rating_scale AS ENUM('1','2','3','4','5');
 CREATE TABLE user_rating(
     uid SERIAL,
     vid SERIAL,
-    rating rating_scale,
+    rating INT CHECK (rating BETWEEN 1 AND 5),
     PRIMARY KEY (uid, vid),
     FOREIGN KEY (uid) REFERENCES users(uid),
     FOREIGN KEY (vid) REFERENCES video_games(vid)
