@@ -17,7 +17,8 @@ from commands import (
     create_account,
     collection,
     play_random,
-    rate
+    rate,
+    search
 )
 
 PROMPT = "nbuvg> "
@@ -27,6 +28,8 @@ CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]]
     "logout": logout,
     "collection":collection,
     "play": play,
+    "create_account": create_account,
+    "search": search,
     "play_random": play_random,
     "rate": rate,
     "follow": follow,
