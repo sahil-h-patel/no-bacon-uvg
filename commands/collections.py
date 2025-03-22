@@ -75,6 +75,22 @@ def add_to_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
         vg_id = cur.fetchone()[0]
         print("vg_id = ", vg_id)
         cur.execute('''
+SELECT CASE 
+           WHEN COUNT(*) > 0 THEN 'User has the platform for the video game'
+           ELSE 'User does NOT have the platform for the video game'
+       END AS result
+FROM user_platform up
+JOIN video_game_platforms vgp ON up.pid = vgp.pid
+JOIN video_games vg ON vgp.vid = vg.vid
+WHERE up.uid = %s -- Replace user_uid with the actual user's UID
+  AND vg.title = %s; -- Replace 'VideoGameName' with the actual video game's name
+        ''', (ctx["uid"], vg_name))
+        res = cur.fetchone()[0]
+        if res == "User does NOT have the platform for the video game":
+            userAnswer = input("Warning you do not have the platform required for this game, would you like to continute (y/n)")
+            if userAnswer != "y":
+                return
+        cur.execute('''
     SELECT cid
     FROM collection
     WHERE name = %s;
@@ -85,16 +101,44 @@ def add_to_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
 INSERT INTO collection_has_video_game (cid, vid)
 VALUES(%s, %s);
             ''', (col_id, vg_id))
-        version = cur.fetchone()
-        print(f'Rows:{version}')
+        conn.commit()
+        print("VideoGame successfully added")
+        # version = cur.fetchone()
+        # print(f'Rows:{version}')
 
 def remove_from_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     print(f"args: {args}")
     print(f"ctx: {ctx}")
+    col_name = input("Collection Name: ")
+    vg_name = input("Video Game Name: ")
+
     with conn.cursor() as cur:
-        cur.execute("SELECT * FROM users")
-        version = cur.fetchone()
-        print(f'Rows:{version}')
+        cur.execute('''
+    SELECT vid
+    FROM video_games
+    WHERE title = %s;
+    ''', (vg_name,))
+        vg_id = cur.fetchone()[0]
+        print("vg_id = ", vg_id)
+        if not vg_id:
+            print("Video Game does not exist")
+            return
+        cur.execute('''
+    SELECT cid
+    FROM collection
+    WHERE name = %s;
+''', (col_name,))
+        col_id = cur.fetchone()[0]    
+        print("col_name = ", col_id)
+        if not col_id:
+            print("Collection does not exist")
+            return
+        cur.execute('''
+    DELETE FROM collection_has_video_game WHERE cid = %s AND vid = %s
+            ''', (col_id, vg_id))
+        conn.commit()
+        print("Successfully deleted")
+
 
 def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     cid = args[0]
