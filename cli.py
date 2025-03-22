@@ -16,13 +16,13 @@ from commands import (
     unfollow, 
     create_account,
     collection,
-    count_collections, 
-    create_collection, 
-    show_collections, 
-    add_to_collection, 
-    delete_collection, 
-    rename_collection, 
-    remove_from_collection
+    # count_collections, 
+    # create_collection, 
+    # show_collections, 
+    # add_to_collection, 
+    # delete_collection, 
+    # rename_collection, 
+    # remove_from_collection
 )
 
 PROMPT = "nbuvg> "
@@ -30,6 +30,7 @@ CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]]
     "example": example,
     "login": login,
     "logout": logout,
+    "create_account": create_account,
     "collection":collection,
 }
 

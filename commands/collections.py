@@ -7,10 +7,9 @@ from typing import Any
 #         cur.execute("SELECT * FROM users")
 #         version = cur.fetchone()
 #         print(f'Rows:{version}')
-
 def collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
-    print(f"args: {args}")
-    print(f"ctx: {ctx}")
+    # print(f"args: {args}")
+    # print(f"ctx: {ctx}")
     if args[0] == "create":
         create_collection(conn, args[1::], ctx)
     elif args[0] == "delete":
@@ -21,14 +20,14 @@ def collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
         remove_from_collection(conn, args[1::], ctx)
     else: 
         return None
-
+    
 def create_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     print(f"args: {args}")
     print(f"ctx: {ctx}")
-    collectionName = args[0]
+    collectionName = input("Name: ")
     with conn.cursor() as cur:
         cur.execute(
-        """
+        '''
         SELECT 
             CASE 
                 WHEN COUNT(c.cid) > 0 THEN 'User has the collection'
@@ -39,22 +38,26 @@ def create_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
         ON u.uid = uhc.uid
         JOIN collection c
         ON uhc.cid = c.cid
-        WHERE u.uid = %s AND c.name = '%s';
-        """, 
+        WHERE u.uid = %s AND c.name = %s;
+        ''', 
         (ctx["uid"], collectionName))
-        if cur.fetchone == "User does not have the collection":
+        if cur.fetchone()[0] == "User does not have the collection":
             cur.execute(
-            """
+            '''
             INSERT INTO collection (name)
-                VALUES ('%s');
-                    """, collectionName)
+            VALUES (%s)
+            RETURNING cid;
+            ''', 
+            (collectionName,))
+            cid = cur.fetchone()[0]
             cur.execute(
-            """
+            '''
             INSERT INTO user_has_collection(uid, cid)
             VALUES(%s, %s)
-            """, )
-        version = cur.fetchone()
-        print(f'Rows:{version}')
+            ''', 
+            (ctx["uid"], cid))
+        print(f'Successfully made collection {collectionName}')
+        conn.commit()
 
 def add_to_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     # print(f"args: {args}")
@@ -102,10 +105,10 @@ def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
         FROM collection c
         WHERE cid = %s;
         ''',
+        ''',
         (cid))
     print(f'Deleted collection successfully')
     conn.commit()
-    pass
 
 def rename_collection(conn: psycopg.Connection, args: list[str]):
     name = args[0]
@@ -116,6 +119,7 @@ def rename_collection(conn: psycopg.Connection, args: list[str]):
         UPDATE collection
         SET name = %s
         WHERE cid = %s;
+        ''',
         ''',
         (name, cid))
     print(f'Renamed collection to {name} successfully')
