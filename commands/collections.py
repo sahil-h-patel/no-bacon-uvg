@@ -11,14 +11,14 @@ from typing import Any
 def collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     print(f"args: {args}")
     print(f"ctx: {ctx}")
-    if args[1] == "create":
-        create_collection(conn, args[2::], ctx)
-    elif args[1] == "delete":
-        delete_collection(conn, args[2::],  ctx)
-    elif args[1] == "add":
-        add_to_collection(conn, args[2::], ctx)
-    elif args[1] == "remove":
-        remove_from_collection(conn, args[2::], ctx)
+    if args[0] == "create":
+        create_collection(conn, args[1::], ctx)
+    elif args[0] == "delete":
+        delete_collection(conn, args[1::],  ctx)
+    elif args[0] == "add":
+        add_to_collection(conn, args[1::], ctx)
+    elif args[0] == "remove":
+        remove_from_collection(conn, args[1::], ctx)
     else: 
         return None
 
@@ -57,10 +57,31 @@ def create_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
         print(f'Rows:{version}')
 
 def add_to_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
-    print(f"args: {args}")
-    print(f"ctx: {ctx}")
+    # print(f"args: {args}")
+    # print(f"ctx: {ctx}")
+    col_name = input("Collection Name: ")
+    vg_name = input("Video Game Name: ")
+    
     with conn.cursor() as cur:
-        cur.execute("SELECT * FROM users")
+
+        cur.execute('''
+    SELECT vid
+    FROM video_games
+    WHERE title = %s;
+    ''', (vg_name,))
+        vg_id = cur.fetchone()[0]
+        print("vg_id = ", vg_id)
+        cur.execute('''
+    SELECT cid
+    FROM collection
+    WHERE name = %s;
+''', (col_name,))
+        col_id = cur.fetchone()[0]
+        print("col_id = ", col_id)
+        cur.execute('''
+INSERT INTO collection_has_video_game (cid, vid)
+VALUES(%s, %s);
+            ''', (col_id, vg_id))
         version = cur.fetchone()
         print(f'Rows:{version}')
 
@@ -80,7 +101,7 @@ def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
         DELETE 
         FROM collection c
         WHERE cid = %s;
-        '''
+        ''',
         (cid))
     print(f'Deleted collection successfully')
     conn.commit()
@@ -95,7 +116,7 @@ def rename_collection(conn: psycopg.Connection, args: list[str]):
         UPDATE collection
         SET name = %s
         WHERE cid = %s;
-        '''
+        ''',
         (name, cid))
     print(f'Renamed collection to {name} successfully')
     conn.commit() 
