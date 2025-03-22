@@ -34,7 +34,7 @@ CREATE TYPE esrb_ratings AS ENUM('RP', 'RPM', 'E', 'E10', 'T', 'M', 'AO');
 CREATE TABLE video_games(
     vid SERIAL PRIMARY KEY,
     esrb esrb_ratings,
-    title VARCHAR(64) NOT NULL
+    title VARCHAR(64) UNIQUE NOT NULL
 );
 
 CREATE TABLE genre(
@@ -87,7 +87,7 @@ CREATE TABLE user_rating(
     uid SERIAL,
     vid SERIAL,
     rating rating_scale,
-    PRIMARY KEY (uid, vid, rating),
+    PRIMARY KEY (uid, vid),
     FOREIGN KEY (uid) REFERENCES users(uid),
     FOREIGN KEY (vid) REFERENCES video_games(vid)
 );
@@ -95,12 +95,11 @@ CREATE TABLE user_rating(
 CREATE TABLE user_plays(
     uid SERIAL,
     vid SERIAL,
-    start timestamp,
+    start_time timestamp,
     end_time timestamp, -- end is a keyword and would be quoted but I didn't want to have that mess up queries so I changed the name
-    PRIMARY KEY (uid, vid, start),
+    PRIMARY KEY (uid, vid, start_time),
     FOREIGN KEY (uid) REFERENCES users(uid),
     FOREIGN KEY (vid) REFERENCES video_games(vid)
-
 );
 
 CREATE TABLE collection(
