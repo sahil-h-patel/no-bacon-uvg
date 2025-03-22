@@ -1,59 +1,44 @@
 import psycopg
 from typing import Any
 
+def is_int(s: str):
+    try:
+        int(s)
+        return True
+    except:
+        return False
 
 def rate(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
+    if len(args) < 2 or not is_int(args[-1]):
+        print(
+            "Usage: rate [title] [rating: 0-5]")
+        return
+
     if 'uid' not in ctx:
         print("Not logged in. Please use the log in command to continuing!")
         return
-
     uid = int(ctx['uid'])
 
-    if len(args) != 2:
-        print(
-            "Usage: rate [title] [rating]\n rating must be a integer from 1 to 5")
-        return
 
-    title = args[0]
-    rating = int(args[1])
-    print(type(rating),  rating > 0, rating < 6)
-    if rating < 0 or rating > 6:
+    title = " ".join(args[0:-1])
+    rating = args[-1]
+    if int(rating) not in range(1, 6):
         print(
             "Usage: rating must be a integer from 1 to 5")
         return
 
-    try:
-        with conn.cursor() as cur:
-            # Random Game Query
+    with conn.cursor() as cur:
+        try:
+
             cur.execute("""
-                SELECT vid
-                FROM video_games
-                WHERE title = %s
-            """, (title,))
-            vid = cur.fetchone()[0]
-            cur.execute("""
-                SELECT rating
-                FROM user_rating
-                WHERE uid = %s AND vid = %s
-            """, (uid, vid)
+                INSERT INTO user_rating (uid,vid,rating)
+                VALUES (%s,(SELECT vid FROM video_games WHERE title = %s),%s)
+                ON CONFLICT (uid, vid) DO UPDATE SET rating = EXCLUDED.rating;
+            """, (uid, title, rating)
             )
-            ver = cur.fetchone()
-            print(ver)
-            if (ver is None):
-                cur.execute("""
-                    INSERT INTO user_rating (uid,vid,rating) VALUES (%s,%s,%s)
-                """, (uid, vid, str(rating)))
-                print(f"Successfully Rated {title}, '{rating}'")
-            else:
-                print("updating")
-                cur.execute("""
-                    UPDATE user_rating
-                    SET rating = %s
-                    WHERE uid = %s AND vid = %s
-                """, (str(rating), uid, vid)
-                )
-                print(f"Updated rating of {title} to '{rating}'")
             conn.commit()
-    except Exception as error:
-        print(f"Exception: {error}")
-        return
+        except psycopg.errors.NotNullViolation:
+            print(f"failed: could not find video game named '{title}'")
+            return
+
+        print(f"Successfully set rating of '{title}' to {rating}")

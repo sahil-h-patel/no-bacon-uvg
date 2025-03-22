@@ -1,68 +1,45 @@
 import psycopg
+from datetime import datetime
 from typing import Any
 
+DATE_FORMAT = "%m-%d-%Y"
 
 def play(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
-    print(f"args: {args}")
-    print(f"ctx: {ctx}")
-
-    if len(args) == 2:
-        title = args[0]
-        minutes = int(args[1])
-    elif len(args) == 1 and args[0].isdigit():
-        minutes = int(args[0])
-        title = None
-    else:
-        print("Usage: play [optional: title] [minutes]")
+    if len(args) != 3:
+        print(f"Usage: play [title] [start date: {DATE_FORMAT}] [end date: {DATE_FORMAT}]")
+        return
+    if 'uid' not in ctx:
+        print("Not logged in. Login first!")
         return
 
+    title = " ".join(args[0:-2])
+    try:
+        start_date = datetime.strptime(args[-2], DATE_FORMAT)
+    except ValueError:
+        print(f"failed: start date improperly formatted: it must be of the form {DATE_FORMAT}")
+        return
+
+    try:
+        end_date = datetime.strptime(args[-1], DATE_FORMAT)
+    except ValueError:
+        print(f"failed: start date improperly formatted: it must be of the form {DATE_FORMAT}")
+        return
     uid = ctx['uid']
 
-    if title is not None:
-        with conn.cursor() as cur:
-            select_game_query = ("""
-                SELECT vid
-                FROM video_games as v
-                WHERE v.title = '%s'
-                """ % (title))
-            query = (
-                """
-                    INSERT INTO user_plays (uid,vid,start,end_time)
-                    VALUES ('%s', (%s) ,CURRENT_TIMESTAMP, (SELECT CURRENT_TIMESTAMP + INTERVAL '%s minutes'))
-                """ % (uid, select_game_query, minutes)
-            )
-            try:
-                cur.execute(query)
-                conn.commit()
-                print(f"Successfully recorded {
-                    minutes} minute(s) of playtime on {title}")
-            except Exception as error:
-                print(f"Exception: {error}")
-    else:
-        with conn.cursor() as cur:
-            random_game_query = ("""
-                SELECT c.vid, v.title
-                FROM user_has_collection u, collection_has_video_game c, video_games v
-                WHERE u.cid = c.cid AND u.uid = %s AND v.vid = c.vid
-                ORDER BY RANDOM()
-                LIMIT 1
-            """ % (uid))
+    with conn.cursor() as cur:
+        try:
+            cur.execute('''
+                INSERT INTO user_plays (uid,vid,start_time,end_time)
+                VALUES (
+                    %s,
+                    (SELECT vid FROM video_games WHERE title = %s),
+                    %s,
+                    %s
+                )
+            ''', (uid, title, start_date, end_date))
+        except psycopg.errors.NotNullViolation:
+            print(f"failed: could not find video game named '{title}'")
+            return
+    conn.commit()
 
-            cur.execute(random_game_query)
-            vid, title = cur.fetchall()[0]
-
-            query = (
-                """
-                    INSERT INTO user_plays (uid,vid,start,end_time)
-                    VALUES ('%s', %s ,CURRENT_TIMESTAMP, (SELECT CURRENT_TIMESTAMP + INTERVAL '%s minutes'))
-
-
-                """ % (uid, vid, minutes)
-            )
-            try:
-                cur.execute(query)
-                conn.commit()
-                print(f"Successfully recorded {
-                      minutes} minute(s) of playtime on random game: {title}")
-            except Exception as error:
-                print(f"Exception: {error}")
+    print(f"Successfully recorded playing {title} from {start_date} to {end_date}")
