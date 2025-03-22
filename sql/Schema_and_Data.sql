@@ -97,7 +97,7 @@ CREATE TYPE esrb_ratings AS ENUM('RP', 'RPM', 'E', 'E10', 'T', 'M', 'AO');
 CREATE TABLE video_games(
     vid SERIAL PRIMARY KEY,
     esrb esrb_ratings,
-    title VARCHAR(64) NOT NULL
+    title VARCHAR(64) UNIQUE NOT NULL
 );
 
 -- Inserting test video game data
@@ -222,7 +222,7 @@ CREATE TABLE user_rating(
     uid SERIAL,
     vid SERIAL,
     rating rating_scale,
-    PRIMARY KEY (uid, vid, rating),
+    PRIMARY KEY (uid, vid),
     FOREIGN KEY (uid) REFERENCES users(uid),
     FOREIGN KEY (vid) REFERENCES video_games(vid)
 );
@@ -240,14 +240,14 @@ VALUES
 CREATE TABLE user_plays(
     uid SERIAL,
     vid SERIAL,
-    start timestamp,
+    start_time timestamp,
     end_time timestamp, -- end is a keyword and would be quoted but I didn't want to have that mess up queries so I changed the name
-    PRIMARY KEY (uid, vid, start),
+    PRIMARY KEY (uid, vid, start_time),
     FOREIGN KEY (uid) REFERENCES users(uid),
     FOREIGN KEY (vid) REFERENCES video_games(vid)
 );
 -- Inserting test user play data
-INSERT INTO user_plays (uid, vid, start, end_time)
+INSERT INTO user_plays (uid, vid, start_time, end_time)
 VALUES
   (1, 1, '2025-03-20 08:00:00', '2025-03-20 10:00:00'),  -- Alice played 'Super Mario Odyssey' from 8 AM to 10 AM
   (2, 2, '2025-03-19 14:00:00', '2025-03-19 16:30:00'),  -- Bob played 'Fortnite' from 2 PM to 4:30 PM
