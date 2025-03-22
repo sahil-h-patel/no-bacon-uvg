@@ -70,14 +70,12 @@ def populate_user_platforms():
     # Random
     with db_conn.cursor() as cur:
         cur.execute("""
-            INSERT INTO user_platforms (uid, pid)
-            SELECT
-                (SELECT uid FROM users ORDER BY RANDOM() LIMIT 1),
-                (SELECT pid FROM platforms ORDER BY RANDOM() LIMIT 1),
-            FROM generate_series(1, 5000) 
-            ON CONFLICT DO NOTHING; 
-            """
-                    )
+            INSERT INTO user_platform (uid, pid)
+            SELECT u.uid, p.pid FROM users u, platform p
+            ORDER BY RANDOM()
+            LIMIT (SELECT COUNT(*) FROM users)
+            ON CONFLICT DO NOTHING;
+        """)
 
 
 def populate_user_has_collection():
