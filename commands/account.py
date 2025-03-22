@@ -5,8 +5,10 @@ from typing import Any
 def create_account(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     if len(args) != 0:
         print("usage: create_account")
+        return
 
     username = input("Username: ")
+    email = input("Email: ")
     first_name = input("First Name: ")
     last_name = input("Last Name: ")
     password = getpass()
@@ -18,8 +20,18 @@ def create_account(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any
         try:
             cur.execute('''
                 INSERT INTO users (username, password, first_name, last_name, creation_date, last_access)
-                VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+                VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                RETURNING uid;
             ''', (username, password, first_name, last_name))
+            user = cur.fetchone()
+            if not user:
+                print("Failed to create user")
+                return
+
+            cur.execute('''
+                INSERT INTO user_email (uid, email)
+                VALUES (%s, %s);
+            ''', (user[0], email))
             conn.commit()
         except psycopg.errors.UniqueViolation:
             print("failed: Username already in use, aborting...")
