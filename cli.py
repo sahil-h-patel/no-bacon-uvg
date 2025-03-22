@@ -16,6 +16,8 @@ from commands import (
     unfollow, 
     create_account,
     collection,
+    play_random,
+    rate
 )
 
 PROMPT = "nbuvg> "
