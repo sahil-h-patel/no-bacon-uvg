@@ -105,7 +105,6 @@ def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
         FROM collection c
         WHERE cid = %s;
         ''',
-        ''',
         (cid))
     print(f'Deleted collection successfully')
     conn.commit()
@@ -119,7 +118,6 @@ def rename_collection(conn: psycopg.Connection, args: list[str]):
         UPDATE collection
         SET name = %s
         WHERE cid = %s;
-        ''',
         ''',
         (name, cid))
     print(f'Renamed collection to {name} successfully')
