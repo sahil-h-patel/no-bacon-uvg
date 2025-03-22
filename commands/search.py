@@ -3,7 +3,43 @@ from typing import Any
 from datetime import datetime
 import sys
 
+
+def search_title(conn: psycopg.Connection, args: list[str]):
+    print(args)
+    pass
+
+def search_platform(conn: psycopg.Connection, args: list[str]):
+    pass
+
+def search_release_date(conn: psycopg.Connection, args: list[str]):
+    pass
+
+def search_developers(conn: psycopg.Connection, args: list[str]):
+    pass
+
+def search_price(conn: psycopg.Connection, args: list[str]):
+    pass
+
+def search_genre(conn: psycopg.Connection, args: list[str]):
+    pass
+
+
+ARGS = {
+    "title": search_title,
+    "platform": search_platform,
+    "release_date": search_release_date,
+    "developers": search_developers,
+    "price": search_price,
+    "genre": search_genre
+}
+
 def search(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
+    if len(args) == 0 or args[0] not in ARGS:
+        print(f"search [{"|".join(ARGS.keys())}]")
+        return
+    ARGS[args[0]](conn, args[1::])
+
+def _search(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     title = input("Title: ")
     platform = input("Platform: ")
     print("dates in format (mm-dd-yyyy)")
@@ -119,4 +155,3 @@ def search(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
             cur.execute("SELECT * FROM genre AS g WHERE g.gid IN (SELECT gid FROM video_game_genre WHERE vid=%s)",(i[1],))
             print("Genres: " + str(cur.fetchall()[0]))
             print()
-        
