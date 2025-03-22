@@ -10,6 +10,9 @@ from typing import Any
 def collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     # print(f"args: {args}")
     # print(f"ctx: {ctx}")
+    if "uid" not in ctx:
+        print("You are not logged in")
+        return
     if args[0] == "create":
         create_collection(conn, args[1::], ctx)
     elif args[0] == "delete":
@@ -28,9 +31,12 @@ def collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
         return None
     
 def create_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
-    print(f"args: {args}")
-    print(f"ctx: {ctx}")
+    # print(f"args: {args}")
+    # print(f"ctx: {ctx}")
     collectionName = input("Name: ")
+    if len(collectionName) > 64:
+        print("Colelction name should be less than 64 characters")
+        return
     with conn.cursor() as cur:
         cur.execute(
         '''
@@ -69,7 +75,14 @@ def add_to_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
     # print(f"args: {args}")
     # print(f"ctx: {ctx}")
     col_name = input("Collection Name: ")
+    if len(col_name) > 64:
+        print("Colelction name should be less than 64 characters")
+        return
+
     vg_name = input("Video Game Name: ")
+    if len(vg_name) > 64:
+        print("Video Game name should be less than 64 characters")
+        return
     
     with conn.cursor() as cur:
 
@@ -117,10 +130,17 @@ VALUES(%s, %s);
         # print(f'Rows:{version}')
 
 def remove_from_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
-    print(f"args: {args}")
-    print(f"ctx: {ctx}")
+    # print(f"args: {args}")
+    # print(f"ctx: {ctx}")
     col_name = input("Collection Name: ")
+    if len(col_name) > 64:
+        print("Colelction name should be less than 64 characters")
+        return
+
     vg_name = input("Video Game Name: ")
+    if len(vg_name) > 64:
+        print("Video Game name should be less than 64 characters")
+        return
 
     with conn.cursor() as cur:
         cur.execute('''
@@ -155,6 +175,10 @@ def remove_from_collection(conn: psycopg.Connection, args: list[str], ctx: dict[
 
 def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     col_name = input("Collection Name: ")
+    if len(col_name) > 64:
+        print("Colelction name should be less than 64 characters")
+        return
+
     with conn.cursor() as cur:
         cur.execute('''
     SELECT cid
@@ -180,7 +204,14 @@ def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
 
 def rename_collection(conn: psycopg.Connection, args: list[str],  ctx: dict[str, Any]):
     old_name = input("Old collection Name: ")
+    if len(old_name) > 64:
+        print("Colelction name should be less than 64 characters")
+        return
     new_name = input("New COllection Name:")
+    if len(old_name) > 64:
+        print("Collection name should be less than 64 characters")
+        return
+    
     with conn.cursor() as cur:
         cur.execute('''
     SELECT cid
@@ -205,8 +236,8 @@ def rename_collection(conn: psycopg.Connection, args: list[str],  ctx: dict[str,
     conn.commit() 
 
 def count_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
-    print(f"args: {args}")
-    print(f"ctx: {ctx}")
+    # print(f"args: {args}")
+    # print(f"ctx: {ctx}")
     with conn.cursor() as cur:
         cur.execute(
         '''
