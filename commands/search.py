@@ -1,5 +1,6 @@
 import psycopg
 from typing import Any
+from datetime import datetime
 '''
 Users will be able to search for video games by 
     name
@@ -25,14 +26,19 @@ Users can sort the resulting list by:
 
 
 def search(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
-    order = """ORDER BY title ASC"""
     title = input("Title: ")
     platform = input("Platform: ")
-    releaseDate = input("Release Date: ")
+    print("dates in format (mm dd yyyy)")
+    releaseDateStart = input("Release Date Start: ")
+    releaseDateEnd = input("Release Date End: ")
     developer = input("Developer: ")
     publisher = input("Publisher: ")
     price = input("Price: ")
     genre = input("Genre: ")
+
+    # Type checking
+    if price == "":
+        price = "0"
     
     '''
     print("1: by price\n2: by genre\n3: by release year")
@@ -96,13 +102,13 @@ def search(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
                 AND d.name ILIKE %s ESCAPE ''
                 AND pub.name ILIKE %s ESCAPE ''
                 AND g.genre ILIKE %s ESCAPE ''
+                AND vg_platform.price <= %s
+                AND vg_platform.release_date >= %t
+                AND vg_platform.release_date <= %t
             GROUP BY
                 vg.Title, p.name, d.name, pub.name, vg_platform.price, vg_platform.release_date, vg.ESRB, ur.rating;
-            """,("%"+title+"%","%"+platform+"%","%"+developer+"%","%"+publisher+"%","%"+genre+"%"))
-        #,("%%","%%","%%","%%","%%","%%","%%","%%")
-        #AND vg_platform.release_date >= ''
-        #AND vg_platform.release_date <= ''
-        #AND vg_platform.price <= '%%'
+            """,("%"+title+"%","%"+platform+"%","%"+developer+"%","%"+publisher+"%","%"+genre+"%",int(price),releaseDateStart,releaseDateEnd))
+        
         work = cur.fetchall()
         for i in work:
             print(i)
