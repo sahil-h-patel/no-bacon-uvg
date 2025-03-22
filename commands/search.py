@@ -8,14 +8,20 @@ def search(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     platform = input("Platform: ")
     print("dates in format (mm-dd-yyyy)")
     releaseDateStart = input("Release Date Start: ")
-    try: datetime.strptime(releaseDateStart, "%m-%d-%Y")
-    except: 
-        print("invalid date, exiting")
-        return
+    if releaseDateStart == "":
+        releaseDateStart = datetime.min
+    else:
+        try: datetime.strptime(releaseDateStart, "%m-%d-%Y")
+        except: 
+            print("invalid date, exiting")
+            return
     releaseDateEnd = input("Release Date End: ")
-    try: datetime.strptime(releaseDateEnd, "%m-%d-%Y")
-    except: 
-        print("invalid date, exiting")
+    if releaseDateEnd == "":
+        releaseDateEnd = datetime.max
+    else:
+        try: datetime.strptime(releaseDateEnd, "%m-%d-%Y")
+        except: 
+            print("invalid date, exiting")
         return
     developer = input("Developer: ")
     publisher = input("Publisher: ")
@@ -25,10 +31,6 @@ def search(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     # Type checking
     if price == "":
         price = sys.float_info.max
-    if releaseDateEnd == "":
-        releaseDateEnd = datetime.max
-    if releaseDateStart == "":
-        releaseDateStart = datetime.min
     
     # Get order style
     orderby = ""
@@ -36,29 +38,36 @@ def search(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     choice = input("Change order: ")
     match choice:
         case "1":
-            orderby = "ORDER BY\nvg_platform.price"
-        #case "2":
-        #    order = "ORDER BY genre ASC"
+            orderby = "ORDER BY vg_platform.price"
+        case "2":
+            orderby = "ORDER BY genre"
         case "3":
-            orderby = "ORDER BY\nvg_platform.release_date"
+            orderby = "ORDER BY vg_platform.release_date"
         case _:
-            orderby = "ORDER BY title ASC, vg_platform.release_date ASC"
+            orderby = "ORDER BY video_game_name ASC, vg_platform.release_date ASC"
+            choice = 3
     
     # Get ASC Vs. DESC
-    print("1: ASC\n2: DESC")
-    choice = input("ASC or DES: ")
-    match choice:
-        case "1":
-            orderby = orderby + " ASC"
-        case "2":
-            orderby = orderby + "  DESC"
+    if choice != 3:
+        print("1: ASC\n2: DESC")
+        choice = input("ASC or DES: ")
+        match choice:
+            case "1":
+                orderby = orderby + " ASC"
+            case _:
+                orderby = orderby + " DESC"
+
+    print(orderby)
 
     with conn.cursor() as cur:
         cur.execute("""
             SELECT DISTINCT
                 SUM(up.end_time - up.start_time) AS total_time,
                 vg.vid AS vgid,
-                vg.Title AS video_game_name
+                vg.Title AS video_game_name,
+                vg_platform.release_date,
+                vg_platform.price,
+                g.genre
             FROM
                 video_games vg
             JOIN
@@ -91,10 +100,11 @@ def search(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
                 AND vg_platform.release_date >= %t
                 AND vg_platform.release_date <= %t
             GROUP BY
-                vgid, video_game_name
-            """,("%"+title+"%","%"+platform+"%","%"+developer+"%","%"+publisher+"%","%"+genre+"%",int(price),releaseDateStart,releaseDateEnd))
+                vgid, video_game_name, vg_platform.price, vg_platform.release_date, vg_platform.price, g.genre
+            """+orderby,("%"+title+"%","%"+platform+"%","%"+developer+"%","%"+publisher+"%","%"+genre+"%",int(price),releaseDateStart,releaseDateEnd))
         
         work = cur.fetchall()
+        print(work)
         for i in work:
             print("Name: " + str(i[2]))
             print("Time Played: " + str(i[0]))
