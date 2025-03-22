@@ -6,9 +6,17 @@ import sys
 def search(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     title = input("Title: ")
     platform = input("Platform: ")
-    print("dates in format (mm dd yyyy)")
+    print("dates in format (mm-dd-yyyy)")
     releaseDateStart = input("Release Date Start: ")
+    try: datetime.strptime(releaseDateStart, "%m-%d-%Y")
+    except: 
+        print("invalid date, exiting")
+        return
     releaseDateEnd = input("Release Date End: ")
+    try: datetime.strptime(releaseDateEnd, "%m-%d-%Y")
+    except: 
+        print("invalid date, exiting")
+        return
     developer = input("Developer: ")
     publisher = input("Publisher: ")
     price = input("Price: ")
