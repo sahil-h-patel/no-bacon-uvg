@@ -48,3 +48,13 @@ DELETE FROM collection_has_video_game WHERE cid = '' AND vid = '';
 
 -- Delete a user's platform association
 DELETE FROM user_platform WHERE uid = '' AND pid = '';
+
+-- Delete all video games associated with the PS3 or Playstation 3 platform
+DELETE FROM video_games
+WHERE vid IN (
+    SELECT DISTINCT vg.vid
+    FROM video_games vg
+    JOIN video_game_platforms vgp ON vg.vid = vgp.vid
+    JOIN platform p ON vgp.pid = p.pid
+    WHERE p.name IN ('PS3', 'Playstation 3')
+);
