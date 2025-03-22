@@ -1,17 +1,5 @@
 -- AI can do a few things correctly
 
-
-
-CREATE TABLE users(
-    uid SERIAL PRIMARY KEY,
-    username VARCHAR(64) not null unique,
-    password VARCHAR(64) not null,
-    first_name VARCHAR(64),
-    last_name VARCHAR(64),
-    creation_date date,
-    last_access timestamp
-);
-
 -- Inserting test user data without UID
 INSERT INTO users (Username, Password, first_name, last_name, creation_date, last_access)
 VALUES
@@ -23,14 +11,6 @@ VALUES
   ('frank_white', 'passwordF6', 'Frank', 'White', '2025-01-12', '2025-01-12 14:25:00'),
   ('grace_black', 'passwordG7', 'Grace', 'Black', '2025-03-08', '2025-03-08 16:00:00'),
   ('hannah_grey', 'passwordH8', 'Hannah', 'Grey', '2025-02-28', '2025-02-28 17:30:00');
--- select * from users;
-
-CREATE TABLE user_email(
-    uid SERIAL,
-    email VARCHAR(64),
-    PRIMARY KEY(uid, email),
-    FOREIGN KEY(uid) REFERENCES users(uid)
-);
 
 -- Inserting test email data without UID (assuming UID values are already known or will be assigned later)
 INSERT INTO user_email (uid, email)
@@ -44,16 +24,6 @@ VALUES
   (6, 'frank.white@example.com'),
   (7, 'grace.black@example.com'),
   (8, 'hannah.grey@example.com');
--- select * from user_email;
-
-
-CREATE TABLE follows(
-    follower_uid SERIAL,
-    followee_uid SERIAL,
-    PRIMARY KEY (followee_uid, follower_uid),
-    FOREIGN KEY(follower_uid) REFERENCES users(uid),
-    FOREIGN KEY(followee_uid) REFERENCES users(uid)
-);
 
 -- Inserting test follow data without follower_uid and followee_uid
 INSERT INTO follows (follower_uid, followee_uid)
@@ -67,12 +37,6 @@ VALUES
   (6, 7),  -- Frank follows Grace
   (7, 8),  -- Grace follows Hannah
   (8, 1);  -- Hannah follows Alice
--- select * from follows;
-
-CREATE TABLE platform(
-    pid SERIAL PRIMARY KEY,
-    name VARCHAR(64) NOT NULL
-);
 
 -- Inserting test platform data
 INSERT INTO platform (name)
@@ -91,14 +55,6 @@ VALUES
   ('Playstation 3'),
   ('Playstation 4'),
   ('Playstation 5');
--- select * from platform;
-
-CREATE TYPE esrb_ratings AS ENUM('RP', 'RPM', 'E', 'E10', 'T', 'M', 'AO');
-CREATE TABLE video_games(
-    vid SERIAL PRIMARY KEY,
-    esrb esrb_ratings,
-    title VARCHAR(64) UNIQUE NOT NULL
-);
 
 -- Inserting test video game data
 INSERT INTO video_games (esrb, title)
@@ -108,12 +64,6 @@ VALUES
   ('M', 'Grand Theft Auto V'),   -- Game rated "Mature"
   ('E10', 'Minecraft'),         -- Game rated "Everyone 10+"
   ('AO', 'Hot Coffee Mod');     -- Game rated "Adults Only" (fictitious example)
--- select * from video_games;
-
-CREATE TABLE genre(
-    gid SERIAL PRIMARY KEY,
-    genre VARCHAR(64)
-);
 
 INSERT INTO genre (genre)
 VALUES
@@ -127,15 +77,6 @@ VALUES
   ('Fighting'),
   ('Horror'),
   ('Puzzle');
--- select * from genre;
-
-CREATE TABLE video_game_genre(
-    vid SERIAL,
-    gid SERIAL,
-    primary key(vid, gid),
-    FOREIGN KEY(vid) REFERENCES video_games(vid),
-    FOREIGN KEY(gid) REFERENCES genre(gid)
-);
 
 -- Inserting test video game genre data
 INSERT INTO video_game_genre (vid, gid)
@@ -145,12 +86,6 @@ VALUES
   (3, 7),  -- 'Grand Theft Auto V' is a Strategy game (vid = 3, gid = 7)
   (4, 1),  -- 'Minecraft' is an Action game (vid = 4, gid = 1)
   (5, 9);  -- 'Hot Coffee Mod' is a Puzzle game (vid = 5, gid = 9)
---   select * from video_game_genre;
-
-CREATE TABLE contributor(
-    dpid SERIAL PRIMARY KEY ,
-    name varchar(64)
-);
 
 -- Inserting test contributor data
 INSERT INTO contributor (name)
@@ -160,15 +95,7 @@ VALUES
   ('Chris Johnson'),
   ('Emily Davis'),
   ('Michael Brown');
--- select * from contributor;
 
-CREATE TABLE video_game_publisher(
-    dpid SERIAL,
-    vid SERIAL,
-    PRIMARY KEY (dpid, vid),
-    FOREIGN KEY (dpid) REFERENCES contributor(dpid),
-    FOREIGN KEY (vid) REFERENCES video_games(vid)
-);
 -- Inserting test video game publisher data
 INSERT INTO video_game_publisher (dpid, vid)
 VALUES
@@ -177,15 +104,7 @@ VALUES
   (3, 3),  -- Chris Johnson publishes 'Grand Theft Auto V' (dpid = 3, vid = 3)
   (4, 4),  -- Emily Davis publishes 'Minecraft' (dpid = 4, vid = 4)
   (5, 5);  -- Michael Brown publishes 'Hot Coffee Mod' (dpid = 5, vid = 5)
---   select * from video_game_publisher;
 
-CREATE TABLE video_game_developer(
-    dpid SERIAL,
-    vid SERIAL,
-    PRIMARY KEY (dpid, vid),
-    FOREIGN KEY (dpid) REFERENCES contributor(dpid),
-    FOREIGN KEY (vid) REFERENCES video_games(vid)
-);
 -- Inserting test video game developer data
 INSERT INTO video_game_developer (dpid, vid)
 VALUES
@@ -194,18 +113,6 @@ VALUES
   (3, 3),  -- Chris Johnson developed 'Grand Theft Auto V' (dpid = 3, vid = 3)
   (4, 4),  -- Emily Davis developed 'Minecraft' (dpid = 4, vid = 4)
   (5, 5);  -- Michael Brown developed 'Hot Coffee Mod' (dpid = 5, vid = 5)
---  select * from video_game_developer;
-
-CREATE TABLE video_game_platforms(
-    pid SERIAL,
-    vid SERIAL,
-    price decimal(4,2),
-    release_date date,
-    PRIMARY KEY (pid, vid),
-    FOREIGN KEY (pid) REFERENCES platform(pid),
-    FOREIGN KEY (vid) REFERENCES video_games(vid)
-
-);
 
 -- Inserting test video game platform data
 INSERT INTO video_game_platforms (pid, vid, price, release_date)
@@ -215,17 +122,6 @@ VALUES
   (3, 3, 39.99, '2013-09-17'),  -- 'Grand Theft Auto V' on Instagram, released on Sep 17, 2013, priced at $39.99
   (4, 4, 29.99, '2011-11-18'),  -- 'Minecraft' on LinkedIn, released on Nov 18, 2011, priced at $29.99
   (5, 5, 19.99, '2005-08-01');  -- 'Hot Coffee Mod' on TikTok, released on Aug 1, 2005, priced at $19.99
---  select * from video_game_platforms;
-
-CREATE TYPE rating_scale AS ENUM('1','2','3','4','5');
-CREATE TABLE user_rating(
-    uid SERIAL,
-    vid SERIAL,
-    rating rating_scale,
-    PRIMARY KEY (uid, vid),
-    FOREIGN KEY (uid) REFERENCES users(uid),
-    FOREIGN KEY (vid) REFERENCES video_games(vid)
-);
 
 -- Inserting test user rating data
 INSERT INTO user_rating (uid, vid, rating)
@@ -235,17 +131,7 @@ VALUES
   (3, 3, '3'),  -- User 3 (Charlie) rates 'Grand Theft Auto V' 3 stars
   (4, 4, '5'),  -- User 4 (David) rates 'Minecraft' 5 stars
   (5, 5, '2');  -- User 5 (Emily) rates 'Hot Coffee Mod' 2 stars
---   select * from user_rating;
 
-CREATE TABLE user_plays(
-    uid SERIAL,
-    vid SERIAL,
-    start_time timestamp,
-    end_time timestamp, -- end is a keyword and would be quoted but I didn't want to have that mess up queries so I changed the name
-    PRIMARY KEY (uid, vid, start_time),
-    FOREIGN KEY (uid) REFERENCES users(uid),
-    FOREIGN KEY (vid) REFERENCES video_games(vid)
-);
 -- Inserting test user play data
 INSERT INTO user_plays (uid, vid, start_time, end_time)
 VALUES
@@ -254,12 +140,6 @@ VALUES
   (3, 3, '2025-03-18 18:00:00', '2025-03-18 20:00:00'),  -- Charlie played 'Grand Theft Auto V' from 6 PM to 8 PM
   (4, 4, '2025-03-17 12:00:00', '2025-03-17 14:00:00'),  -- David played 'Minecraft' from 12 PM to 2 PM
   (5, 5, '2025-03-16 09:30:00', '2025-03-16 11:00:00');  -- Emily played 'Hot Coffee Mod' from 9:30 AM to 11 AM
--- select * from user_plays;
-
-CREATE TABLE collection(
-    cid SERIAL PRIMARY KEY ,
-    name VARCHAR(64)
-);
 
 -- Inserting test collection data
 INSERT INTO collection (name)
@@ -269,15 +149,7 @@ VALUES
   ('Multiplayer Madness'),
   ('Family Friendly'),
   ('Indie Gems');
--- select * from collection;
 
-CREATE TABLE user_has_collection(
-    uid SERIAL,
-    cid SERIAL,
-    PRIMARY KEY (uid, cid),
-    FOREIGN KEY (uid) REFERENCES users(uid),
-    FOREIGN KEY (cid) REFERENCES collection(cid)
-);
 -- Inserting test data for user collections
 INSERT INTO user_has_collection (uid, cid)
 VALUES
@@ -286,16 +158,7 @@ VALUES
   (3, 3),  -- Charlie is part of the 'Multiplayer Madness' collection (uid = 3, cid = 3)
   (4, 4),  -- David is part of the 'Family Friendly' collection (uid = 4, cid = 4)
   (5, 5);  -- Emily is part of the 'Indie Gems' collection (uid = 5, cid = 5)
--- select * from user_has_collection;
 
-
-CREATE TABLE collection_has_video_game(
-    cid SERIAL,
-    vid SERIAL,
-    PRIMARY KEY (cid, vid),
-    FOREIGN KEY (cid) REFERENCES collection(cid),
-    FOREIGN KEY (vid) REFERENCES video_games(vid)
-);
 -- Inserting test data for video games in collections
 INSERT INTO collection_has_video_game (cid, vid)
 VALUES
@@ -304,15 +167,7 @@ VALUES
   (3, 3),  -- 'Grand Theft Auto V' is part of the 'Multiplayer Madness' collection (cid = 3, vid = 3)
   (4, 4),  -- 'Minecraft' is part of the 'Family Friendly' collection (cid = 4, vid = 4)
   (5, 5);  -- 'Hot Coffee Mod' is part of the 'Indie Gems' collection (cid = 5, vid = 5)
--- select * from collection_has_video_game;
 
-CREATE TABLE user_platform(
-    uid SERIAL,
-    pid SERIAL,
-    PRIMARY KEY (uid,pid),
-    FOREIGN KEY(uid) REFERENCES users(uid),
-    FOREIGN KEY(pid) REFERENCES platform(pid)
-);
 -- Inserting test data for user-platform associations
 INSERT INTO user_platform (uid, pid)
 VALUES
@@ -321,4 +176,3 @@ VALUES
   (3, 3),  -- Charlie uses Instagram (uid = 3, pid = 3)
   (4, 4),  -- David uses LinkedIn (uid = 4, pid = 4)
   (5, 5);  -- Emily uses TikTok (uid = 5, pid = 5)
--- select * from user_platform;

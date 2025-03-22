@@ -100,7 +100,6 @@ CREATE TABLE user_plays(
     PRIMARY KEY (uid, vid, start_time),
     FOREIGN KEY (uid) REFERENCES users(uid),
     FOREIGN KEY (vid) REFERENCES video_games(vid)
-
 );
 
 CREATE TABLE collection(
