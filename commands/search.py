@@ -155,10 +155,21 @@ def print_data(data: list[TupleRow], sort_func: Callable[[Any], Any], decending:
 
     sorted_games = sorted(games.values(), key=sort_func, reverse=decending)
 
+
     for game in sorted_games:
-        print(f"{game["title"]} - {game["rating"]:.2f} Stars - Playtime: {game["playtime"]} - ESRB: {game["esrb"]} - Genre: {game["genre"]}")
-        print(f"\tPublishers - {", ".join(game["publishers"])}")
-        print(f"\tDevelopers - {", ".join(game["developers"])}")
+        rating = "Unknown" if game["rating"] == None else f"{game["rating"]:.2f}"
+
+        try:
+            pub = ", ".join(game["publishers"])
+            dev = ", ".join(game["developers"])
+        except:
+            continue
+
+        if not game["publishers"] or not game["developers"]:
+            continue
+        print(f"{game["title"]} - {rating} Stars - Playtime: {game["playtime"]} - ESRB: {game["esrb"]} - Genre: {game["genre"]}")
+        print(f"\tPublishers - {pub}")
+        print(f"\tDevelopers - {dev}")
         print( "\tPlatforms Released On:")
         for platform in game["platforms"].values():
             print(f"\t\t{platform["name"]} - ${platform["price"]} on {platform["release_date"]}")

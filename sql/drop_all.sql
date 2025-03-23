@@ -16,4 +16,3 @@ DROP TABLE video_game_genre cascade;
 DROP TABLE video_game_platforms cascade;
 DROP TABLE video_game_publisher cascade;
 DROP TYPE ESRB_ratings;
-DROP TYPE rating_scale;

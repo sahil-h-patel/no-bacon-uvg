@@ -19,7 +19,7 @@ def follow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     if len(args) != 1:
         print("usage: follow [email]")
         return
-    if 'uid' in ctx:
+    if 'uid' not in ctx:
         print("must be logged in to use this command")
         return
 
@@ -77,7 +77,7 @@ def unfollow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
 
     if len(args) != 1:
         print("usage: unfollow [email]")
-    if 'uid' in ctx:
+    if 'uid' not in ctx:
         print("must be logged in to use this command")
         return
 

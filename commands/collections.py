@@ -10,6 +10,9 @@ from typing import Any
 def collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     # print(f"args: {args}")
     # print(f"ctx: {ctx}")
+    if len(args) == 0:
+        print("collection [create|delete|add|remove|show|count|rename]")
+        return
     if "uid" not in ctx:
         print("You are not logged in")
         return
@@ -198,8 +201,8 @@ def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
         FROM collection c
         WHERE cid = %s;
         ''',
-        (col_id))
-    print(f'Deleted collection successfully')
+        (col_id,))
+    print('Deleted collection successfully')
     conn.commit()
 
 def rename_collection(conn: psycopg.Connection, args: list[str],  ctx: dict[str, Any]):
@@ -242,8 +245,7 @@ def count_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
         cur.execute(
         '''
         SELECT 
-            u.username  as user_name,
-            count(uhc.cid)  as total_collections
+            COUNT(uhc.cid)  as total_collections
         FROM 
             users u
         LEFT JOIN 
@@ -254,9 +256,12 @@ def count_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
         ORDER BY 
             total_collections DESC ;        
         ''', 
-        ctx["uid"])
-        version = cur.fetchone()
-        print(f'Rows:{version}')
+        (ctx["uid"],))
+        count = cur.fetchone()
+        if not count:
+            print("failed to get count")
+            return
+        print(f'You have {count[0]} collections')
 
 def show_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     user_id = ctx['uid']  # Assuming the user ID is passed as the first argument
@@ -277,6 +282,6 @@ def show_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, A
         ''', 
         (user_id,))
         results = curr.fetchall()
-    conn.commit()
+        for row in results:
+            print(f"{row[0]} - {row[1]} video games - {row[2]} hours")
     return results
-    
