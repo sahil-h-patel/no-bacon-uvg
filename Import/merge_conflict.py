@@ -49,7 +49,7 @@ def add_users():
                         [date(randint(2000, 2025), randint(1, 12), randint(1, 28))])]
     with db_conn.cursor() as cur:
         cur.executemany(
-            "INSERT INTO users (username,password,first_name,last_name,creation_date,last_access) VALUES (%s,%s,%s,%s,%s,CURRENT_TIMESTAMP)", users)
+            "INSERT INTO users (username,password,first_name,last_name,creation_date,last_access) VALUES (%s,%s,%s,%s,%s,CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING", users)
         db_conn.commit()
 
 
@@ -58,10 +58,64 @@ def add_games():
     games = []
     for line in game_file:
         games += [tuple(line.strip().split(','))]
-    exit()
     with db_conn.cursor() as cur:
-        cur.execute(
-            "INSERT INTO video_games (title,esrb) VALUES (%s,%x)", games)
+        cur.executemany(
+            "INSERT INTO video_games (title,esrb) VALUES (%s,%s) ON CONFLICT DO NOTHING", games)
+        db_conn.commit()
+
+
+def add_genres():
+    genre_file = open('genres.txt', 'r').readlines()
+    genres = []
+    for line in genre_file:
+        genres += [tuple(line.strip('\n'))]
+    with db_conn.cursor() as cur:
+        cur.executemany(
+            "INSERT INTO genre (genre) VALUES (%s) ON CONFLICT DO NOTHING", genres)
+        db_conn.commit()
+
+
+def add_platform():
+    platform_file = open('platforms.txt', 'r').readlines()
+    platforms = []
+    for line in platform_file:
+        platforms += [tuple(line.strip('\n'))]
+    with db_conn.cursor() as cur:
+        cur.executemany(
+            "INSERT INTO platform (name) VALUES (%s) ON CONFLICT DO NOTHING", platforms)
+        db_conn.commit()
+
+
+def add_collection():
+    collection_file = open('collection.txt', 'r').readlines()
+    collections = []
+    for line in collection_file:
+        collections += [tuple(line.strip('\n'))]
+    with db_conn.cursor() as cur:
+        cur.executemany(
+            "INSERT INTO collection (name) VALUES (%s) ON CONFLICT DO NOTHING", collections)
+        db_conn.commit()
+
+
+def add_email():
+    email_file = open('emails.txt', 'r').readlines()
+    emails = []
+    for line in email_file:
+        emails += [tuple(line.strip('\n'))]
+    with db_conn.cursor() as cur:
+        cur.executemany(
+            "INSERT INTO user_email (uid,email) VALUES ((SELECT uid FROM users ORDER BY RANDOM() LIMIT 1),%s)  ON CONFLICT DO NOTHING", emails)
+        db_conn.commit()
+
+
+def add_contributors():
+    contributor_file = open('contributors.txt', 'r').readlines()
+    contributors = []
+    for line in contributor_file:
+        contributors += [tuple(line.strip('\n'))]
+    with db_conn.cursor() as cur:
+        cur.executemany(
+            "INSERT INTO contributor (name) VALUES (%s) ON CONFLICT DO NOTHING", contributors)
         db_conn.commit()
 
 
@@ -79,7 +133,7 @@ def populate_user_has_collection():
             SELECT u.uid, c.cid
             FROM uids u
             JOIN cids c ON random() < 0.5
-            LIMIT 5000
+            LIMIT 6000
             ON CONFLICT DO NOTHING
             """
                     )
@@ -100,7 +154,7 @@ def populate_video_game_platform():
                 DATE '1990-01-01' + INTERVAL '1 day' * floor(random() * (DATE '2024-12-31' - DATE '1990-01-01')) AS release_date
                 FROM vids v
                 JOIN pids p ON random() < 0.5
-                LIMIT 5000 
+                LIMIT 6000 
                 ON CONFLICT DO NOTHING
         """)
         db_conn.commit()
@@ -120,7 +174,7 @@ def populate_collection_has_video_games():
             SELECT cid, vid
             FROM cids
             JOIN vids  ON random() < 0.5
-            LIMIT 5000
+            LIMIT 6000
             ON CONFLICT DO NOTHING
             """
                     )
@@ -131,30 +185,126 @@ def populate_user_platforms():
     # Random
     with db_conn.cursor() as cur:
         cur.execute("""
-            INSERT INTO user_platforms (uid, pid)
-            SELECT
-                (SELECT uid FROM users ORDER BY RANDOM() LIMIT 1),
-                (SELECT pid FROM platforms ORDER BY RANDOM() LIMIT 1),
-            FROM generate_series(1, 5000) 
-            ON CONFLICT DO NOTHING; 
+            INSERT INTO user_platform (uid, pid)
+            SELECT u.uid, p.pid 
+            FROM users u
+            JOIN user_has_collection c ON c.uid = u.uid
+            JOIN collection_has_video_game v ON v.cid = c.cid
+            JOIN video_game_platforms p ON p.vid = v.vid
+            ORDER BY RANDOM()
+            ON CONFLICT DO NOTHING
+            LIMIT 30000
             """
                     )
+        db_conn.commit()
 
 
-# def populate_user_rating():
-#     # User must have the game to rate, so user_has_collection and user_has_game
-#     with db_conn.cursor() as cur:
-#         cur.execute("""
-#             INSERT INTO user_rating (uid, vid, rating)
-#             SELECT
-#                 (SELECT uid FROM users ORDER BY RANDOM() LIMIT 1),
-#                 (SELECT vid FROM video_games ORDER BY RANDOM() LIMIT 1),
-#                 (SELECT unnest(enum_range(NULL::rating_scale)) ORDER BY random() LIMIT 1)
-#             FROM generate_series(1, 5000)
-#             ON CONFLICT DO NOTHING;
-#             """
-#                     )
-#         # db_conn.commit()
+def populate_user_ratings():
+    with db_conn.cursor() as cur:
+        cur.execute("""
+            INSERT INTO user_rating (uid, vid,rating)
+            SELECT u.uid, v.vid, floor(random() * 5) + 1
+            FROM users u
+            JOIN user_has_collection c ON c.uid = u.uid
+            JOIN collection_has_video_game v ON v.cid = c.cid
+            ORDER BY RANDOM()
+            LIMIT 5 
+            ON CONFLICT DO NOTHING;            
+            """
+                    )
+        db_conn.commit()
 
-setup_conn()
-add_users()
+        """
+            INSERT INTO user_rating (uid, vid,rating)
+            SELECT u.uid, v.vid,
+            NOW() - INTERVAL '1 day' * (random() * 365) AS start_time,
+            (NOW() - INTERVAL '1 day' * (random() * 365)) + INTERVAL '1 minutes' * (random() * 10 + 1) AS end_time
+            FROM users u
+            JOIN user_has_collection c ON c.uid = u.uid
+            JOIN collection_has_video_game v ON v.cid = c.cid
+            ORDER BY RANDOM()
+            LIMIT 10000 
+            ON CONFLICT DO NOTHING;            
+
+        """
+
+
+def populate_user_ratings():
+    with db_conn.cursor() as cur:
+        cur.execute("""
+            INSERT INTO user_rating (uid, vid,rating)
+            SELECT u.uid, v.vid,
+            NOW() - INTERVAL '1 day' * (random() * 365) AS start_time,
+            (NOW() - INTERVAL '1 day' * (random() * 365)) + INTERVAL '1 minutes' * (random() * 10 + 1) AS end_time
+            FROM users u
+            JOIN user_has_collection c ON c.uid = u.uid
+            JOIN collection_has_video_game v ON v.cid = c.cid
+            ORDER BY RANDOM()
+            LIMIT 6000 
+            ON CONFLICT DO NOTHING;            
+            """
+                    )
+        db_conn.commit()
+
+
+def populate_video_game_genre():
+    with db_conn.cursor() as cur:
+        cur.execute("""
+            WITH vids AS (
+                SELECT vid FROM video_games ORDER BY random()
+            ),
+                gids AS (
+                SELECT gid FROM genre ORDER BY random()
+            )
+            INSERT INTO video_game_genre (vid,gid)
+            SELECT v.vid, g.gid
+            FROM vids v
+            JOIN gids g ON random() < 0.5 
+            ORDER BY RANDOM()
+            LIMIT 6000
+            ON CONFLICT DO NOTHING
+            """
+                    )
+        db_conn.commit()
+
+
+def populate_video_game_developer():
+    with db_conn.cursor() as cur:
+        cur.execute("""
+            WITH vid AS (
+                SELECT vid FROM video_games ORDER BY random()
+            ),
+                dpids AS (
+                SELECT dpid FROM contributor ORDER BY random()
+            )
+            INSERT INTO video_game_developer (vid,dpid)
+            SELECT v.vid, d.dpid
+            FROM vids v
+            JOIN dpids d ON random() < 0.5 
+            ORDER BY RANDOM()
+            LIMIT 6000
+            ON CONFLICT DO NOTHING
+            """
+                    )
+        db_conn.commit()
+
+
+def populate_video_game_publisher():
+    with db_conn.cursor() as cur:
+        cur.execute("""
+            WITH vid AS (
+                SELECT vid FROM video_games ORDER BY random()
+            ),
+                dpids AS (
+                SELECT dpid FROM contributor ORDER BY random()
+            )
+            INSERT INTO video_game_publisher (vid,dpid)
+            SELECT v.vid, d.dpid
+            FROM vids v
+            JOIN dpids d ON random() < 0.5 
+            ORDER BY RANDOM()
+            LIMIT 6000
+            ON CONFLICT DO NOTHING
+            """
+                    )
+        db_conn.commit()
