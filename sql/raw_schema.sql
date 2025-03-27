@@ -3,7 +3,7 @@
 CREATE TABLE users(
     uid SERIAL PRIMARY KEY,
     username VARCHAR(64) not null unique,
-    password VARCHAR(64) not null,
+    password VARCHAR(128) not null,
     first_name VARCHAR(64),
     last_name VARCHAR(64),
     creation_date date,

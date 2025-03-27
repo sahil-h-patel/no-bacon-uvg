@@ -1,6 +1,9 @@
 import psycopg
 from getpass import getpass
-from typing import Any
+from typing import Any, Callable
+from argon2 import PasswordHasher
+
+ph = PasswordHasher()
 
 def create_account(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     if len(args) != 0:
@@ -16,13 +19,15 @@ def create_account(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any
         print("Different passwords detected, aborting...")
         return
 
+    hash = ph.hash(password)
+
     with conn.cursor() as cur:
         try:
             cur.execute('''
                 INSERT INTO users (username, password, first_name, last_name, creation_date, last_access)
                 VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 RETURNING uid;
-            ''', (username, password, first_name, last_name))
+            ''', (username, hash, first_name, last_name))
             user = cur.fetchone()
             if not user:
                 print("Failed to create user")
@@ -60,11 +65,15 @@ def login(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
             FROM
                 users
             WHERE
-                username = %s
-                AND password = %s;
-        ''', (username, password))
+                username = %s;
+        ''', (username,))
         user = cur.fetchone()
-        if not user:
+        print(user)
+        try:
+            if not user or not ph.verify(user[2], password):
+                print("Invalid username or password.")
+                return
+        except:
             print("Invalid username or password.")
             return
 
