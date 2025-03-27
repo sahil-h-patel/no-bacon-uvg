@@ -36,27 +36,44 @@ def collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
 def create_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     # print(f"args: {args}")
     # print(f"ctx: {ctx}")
-    collectionName = input("Name: ")
+    if len(args) < 1:
+        print(f"Usage: collection create [Name]")
+        return
+    collectionName = " ".join(args)
     if len(collectionName) > 64:
-        print("Colelction name should be less than 64 characters")
+        print("Collection name should be less than 64 characters")
         return
     with conn.cursor() as cur:
+# ------------Query Boundary ----------------------
         cur.execute(
         '''
         SELECT 
             CASE 
-                WHEN COUNT(c.cid) > 0 THEN 'User has the collection'
-                ELSE 'User does not have the collection'
+                WHEN COUNT(c.cid) > 0 THEN 'Collection exists'
+                ELSE 'Collection does not exist'
             END AS result
-        FROM users u
-        JOIN user_has_collection uhc
-        ON u.uid = uhc.uid
-        JOIN collection c
-        ON uhc.cid = c.cid
-        WHERE u.uid = %s AND c.name = %s;
+        FROM collection c 
+        WHERE c.name = %s
         ''', 
-        (ctx["uid"], collectionName))
-        if cur.fetchone()[0] == "User does not have the collection":
+        (collectionName,))
+        res = cur.fetchone()[0]
+        while res == "Collection exists":
+            temp = input(f"Collection with name {collectionName} already exists, please choose a new name: ")
+            cur.execute(
+        '''
+        SELECT 
+            CASE 
+                WHEN COUNT(c.cid) > 0 THEN 'Collection exists'
+                ELSE 'Collection does not exist'
+            END AS result
+        FROM collection c 
+        WHERE c.name = %s
+        ''', 
+        (temp,))
+            res = cur.fetchone()[0]
+            collectionName = temp
+# ------------Query Boundary ----------------------
+        if res == "Collection does not exist":
             cur.execute(
             '''
             INSERT INTO collection (name)
@@ -64,6 +81,8 @@ def create_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
             RETURNING cid;
             ''', 
             (collectionName,))
+            
+# ------------Query Boundary ----------------------
             cid = cur.fetchone()[0]
             cur.execute(
             '''
@@ -71,15 +90,21 @@ def create_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
             VALUES(%s, %s)
             ''', 
             (ctx["uid"], cid))
-        print(f'Successfully made collection {collectionName}')
-        conn.commit()
+# ------------Query Boundary ----------------------
+            print(f'Successfully made collection {collectionName}')
+            conn.commit()
+        else: 
+            print(f'Collection creation failed: Collection with name "{collectionName}" Already exists')
 
 def add_to_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     # print(f"args: {args}")
     # print(f"ctx: {ctx}")
-    col_name = input("Collection Name: ")
+    if len(args) < 1:
+        print(f"Usage: collection create [Name]")
+        return
+    col_name = " ".join(args)
     if len(col_name) > 64:
-        print("Colelction name should be less than 64 characters")
+        print("Collection name should be less than 64 characters")
         return
 
     vg_name = input("Video Game Name: ")
@@ -88,7 +113,7 @@ def add_to_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
         return
     
     with conn.cursor() as cur:
-
+# ------------Query Boundary ----------------------
         cur.execute('''
     SELECT vid
     FROM video_games
@@ -96,6 +121,7 @@ def add_to_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
     ''', (vg_name,))
         vg_id = cur.fetchone()[0]
         print("vg_id = ", vg_id)
+# ------------Query Boundary ----------------------
         cur.execute('''
 SELECT CASE 
            WHEN COUNT(*) > 0 THEN 'User has the platform for the video game'
@@ -112,17 +138,20 @@ WHERE up.uid = %s -- Replace user_uid with the actual user's UID
             userAnswer = input("Warning you do not have the platform required for this game, would you like to continute (y/n)")
             if userAnswer != "y":
                 return
+# ------------Query Boundary ----------------------
         cur.execute('''
     SELECT cid
     FROM collection
     WHERE name = %s;
 ''', (col_name,))
+# ------------Query Boundary ----------------------
         col_id = cur.fetchone()
         if not col_id:
             print("Collection does not exist")
             return
         col_id = col_id[0]
         print("col_id = ", col_id)
+# ------------Query Boundary ----------------------
         cur.execute('''
 INSERT INTO collection_has_video_game (cid, vid)
 VALUES(%s, %s);
@@ -137,7 +166,7 @@ def remove_from_collection(conn: psycopg.Connection, args: list[str], ctx: dict[
     # print(f"ctx: {ctx}")
     col_name = input("Collection Name: ")
     if len(col_name) > 64:
-        print("Colelction name should be less than 64 characters")
+        print("Collection name should be less than 64 characters")
         return
 
     vg_name = input("Video Game Name: ")
@@ -146,11 +175,13 @@ def remove_from_collection(conn: psycopg.Connection, args: list[str], ctx: dict[
         return
 
     with conn.cursor() as cur:
+# ------------Query Boundary ----------------------
         cur.execute('''
     SELECT vid
     FROM video_games
     WHERE title = %s;
     ''', (vg_name,))
+# ------------Query Boundary ----------------------
         vg_id = cur.fetchone()
         print("vg_id = ", vg_id)
         if not vg_id:
@@ -158,17 +189,20 @@ def remove_from_collection(conn: psycopg.Connection, args: list[str], ctx: dict[
             return
         vg_id = vg_id[0]
 
+# ------------Query Boundary ----------------------
         cur.execute('''
     SELECT cid
     FROM collection
     WHERE name = %s;
 ''', (col_name,))
+# ------------Query Boundary ----------------------
         col_id = cur.fetchone()  
         print("col_name = ", col_id)
         if not col_id:
             print("Collection does not exist")
             return
         col_id = col_id[0]
+# ------------Query Boundary ----------------------
         cur.execute('''
     DELETE FROM collection_has_video_game WHERE cid = %s AND vid = %s
             ''', (col_id, vg_id))
@@ -179,15 +213,17 @@ def remove_from_collection(conn: psycopg.Connection, args: list[str], ctx: dict[
 def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     col_name = input("Collection Name: ")
     if len(col_name) > 64:
-        print("Colelction name should be less than 64 characters")
+        print("Collection name should be less than 64 characters")
         return
 
     with conn.cursor() as cur:
+# ------------Query Boundary ----------------------
         cur.execute('''
     SELECT cid
     FROM collection
     WHERE name = %s;
 ''', (col_name,))
+# ------------Query Boundary ----------------------
         col_id = cur.fetchone() 
         print("col_name = ", col_id)
         if not col_id:
@@ -195,6 +231,7 @@ def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
             return
         col_id = col_id[0]
     
+# ------------Query Boundary ----------------------
         cur.execute(
         '''
         DELETE 
@@ -202,13 +239,14 @@ def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
         WHERE cid = %s;
         ''',
         (col_id,))
+# ------------Query Boundary ----------------------
     print('Deleted collection successfully')
     conn.commit()
 
 def rename_collection(conn: psycopg.Connection, args: list[str],  ctx: dict[str, Any]):
     old_name = input("Old collection Name: ")
     if len(old_name) > 64:
-        print("Colelction name should be less than 64 characters")
+        print("Collection name should be less than 64 characters")
         return
     new_name = input("New COllection Name:")
     if len(old_name) > 64:
@@ -216,11 +254,13 @@ def rename_collection(conn: psycopg.Connection, args: list[str],  ctx: dict[str,
         return
     
     with conn.cursor() as cur:
+# ------------Query Boundary ----------------------
         cur.execute('''
     SELECT cid
     FROM collection
     WHERE name = %s;
 ''', (old_name,))
+# ------------Query Boundary ----------------------
         col_id = cur.fetchone()
         # print("col_name = ", col_id)
         if not col_id:
@@ -235,6 +275,7 @@ def rename_collection(conn: psycopg.Connection, args: list[str],  ctx: dict[str,
         WHERE cid = %s;
         ''',
         (new_name, col_id))
+# ------------Query Boundary ----------------------
     print(f'Renamed collection to {new_name} successfully')
     conn.commit() 
 
@@ -242,6 +283,7 @@ def count_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
     # print(f"args: {args}")
     # print(f"ctx: {ctx}")
     with conn.cursor() as cur:
+# ------------Query Boundary ----------------------
         cur.execute(
         '''
         SELECT 
@@ -257,6 +299,7 @@ def count_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
             total_collections DESC ;        
         ''', 
         (ctx["uid"],))
+# ------------Query Boundary ----------------------
         count = cur.fetchone()
         if not count:
             print("failed to get count")
@@ -266,6 +309,7 @@ def count_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
 def show_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     user_id = ctx['uid']  # Assuming the user ID is passed as the first argument
     with conn.cursor() as curr:
+# ------------Query Boundary ----------------------
         curr.execute(
         '''
         SELECT 
@@ -281,6 +325,7 @@ def show_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, A
         ORDER BY c.name ASC;
         ''', 
         (user_id,))
+# ------------Query Boundary ----------------------
         results = curr.fetchall()
         for row in results:
             print(f"{row[0]} - {row[1]} video games - {row[2]} hours")
