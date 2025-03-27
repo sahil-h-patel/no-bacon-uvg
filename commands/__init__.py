@@ -7,4 +7,4 @@ from .rate import rate
 from .follow import follow, unfollow
 from .profile import profile
 from .platform import platform
-from .recommend import top_5_releases_month
+from .recommend import top_5_releases_month, top_20_rolling
