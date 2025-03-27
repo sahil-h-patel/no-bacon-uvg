@@ -20,7 +20,8 @@ from commands import (
     rate,
     search,
     profile,
-    platform
+    platform,
+    top_5_releases_month
 )
 
 PROMPT = "nbuvg> "
@@ -38,7 +39,8 @@ CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]]
     "unfollow": unfollow,
     "create_account": create_account,
     "profile": profile,
-    "platform": platform
+    "platform": platform,
+    "top_5_monthly" : top_5_releases_month,
 }
 
 CONTEXT: dict[str, Any] = {}
