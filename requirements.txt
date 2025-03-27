@@ -2,3 +2,4 @@ dotenv==0.9.9
 psycopg==3.2.6
 setuptools==75.8.2
 sshtunnel==0.4.0
+argon2-cffi==23.1.0
