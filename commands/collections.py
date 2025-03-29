@@ -30,6 +30,10 @@ def collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
         count_collections(conn, args[1::], ctx)
     elif args[0] == "rename":
         rename_collection(conn, args[1::], ctx)    
+    elif args[0] == "describe":
+        describe_collection(conn, args[1::], ctx)
+    # elif args[0] == 'test':
+    #     test(conn, args[1::], ctx)
     else: 
         return None
     
@@ -100,27 +104,35 @@ def add_to_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
     # print(f"args: {args}")
     # print(f"ctx: {ctx}")
     if len(args) < 1:
-        print(f"Usage: collection create [Name]")
+        print(f"Usage: collection add [Video Game Name]")
         return
-    col_name = " ".join(args)
-    if len(col_name) > 64:
-        print("Collection name should be less than 64 characters")
-        return
-
-    vg_name = input("Video Game Name: ")
+    vg_name = " ".join(args)
     if len(vg_name) > 64:
         print("Video Game name should be less than 64 characters")
+        return
+
+    col_name = input("Collection Name: ")
+    if len(col_name) > 64:
+        print("Collection name should be less than 64 characters")
         return
     
     with conn.cursor() as cur:
 # ------------Query Boundary ----------------------
-        cur.execute('''
-    SELECT vid
-    FROM video_games
-    WHERE title = %s;
-    ''', (vg_name,))
-        vg_id = cur.fetchone()[0]
-        print("vg_id = ", vg_id)
+        res = -2
+        while res < 0:
+            temp = ""
+            if res == -2:
+                temp = input(f"Video game with name {vg_name} does not exist, double check that you spelled it correctly\n please choose a new name: ")
+            cur.execute(
+        '''
+        SELECT COALESCE((select v.vid from video_games v where v.title = %s), -1);
+        ''', 
+        (temp,))
+            res = cur.fetchone()[0]
+            vg_name = temp
+        vg_id = res
+
+        # print("vg_id = ", vg_id)
 # ------------Query Boundary ----------------------
         cur.execute('''
 SELECT CASE 
@@ -140,17 +152,42 @@ WHERE up.uid = %s -- Replace user_uid with the actual user's UID
                 return
 # ------------Query Boundary ----------------------
         cur.execute('''
-    SELECT cid
-    FROM collection
-    WHERE name = %s;
-''', (col_name,))
+            SELECT cid
+            FROM collection
+            WHERE name = %s;
+        ''', (col_name,))
 # ------------Query Boundary ----------------------
         col_id = cur.fetchone()
+        # print("col_id = ", col_id)
         if not col_id:
             print("Collection does not exist")
             return
         col_id = col_id[0]
-        print("col_id = ", col_id)
+        # print("col_id = ", col_id)
+        res = -1
+        while res < 0:
+            if res == -2:
+                
+                col_name = input("Input new Collection Name:")
+                cur.execute('''
+                    SELECT cid
+                    FROM collection
+                    WHERE name = %s;
+                ''', (col_name,))
+                col_id = cur.fetchone()
+                if not col_id:
+                    print("Collection does not exist")
+                    return
+                col_id = col_id[0]
+
+            cur.execute('''
+                SELECT COALESCE((SELECT uid from user_has_collection where uid = %s and cid = %s), -1);
+            ''', (ctx["uid"], col_id))
+            temp = cur.fetchone()[0]
+            if temp == -1:
+                print("You don't own this collection")
+                res = -2
+
 # ------------Query Boundary ----------------------
         cur.execute('''
 INSERT INTO collection_has_video_game (cid, vid)
@@ -330,3 +367,27 @@ def show_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, A
         for row in results:
             print(f"{row[0]} - {row[1]} video games - {row[2]} hours")
     return results
+
+
+def describe_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
+    
+    return ""
+
+# def test(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
+#     query = "SELECT COALESCE((SELECT uid from user_has_collection where uid = %s and cid = %s), -1);"
+#     data = data_nonexistant(conn, ctx, query, "Collection", ctx["uid"], 1218)
+#     print(f"{data} should be equal to 2010")
+
+#     return ""
+
+
+def data_nonexistant(conn: psycopg.Connection, ctx: dict[str, Any], query, datatype, *args):
+    with conn.cursor() as cur:
+        res = -2
+        while res < 0:
+            if res == -1:
+                temp = input(f"\n{datatype} does not exist. Please double check your spelling and capitals\n Enter name here: ")
+            cur.execute(query, (args))
+            res = cur.fetchone()[0]
+        return res
+                
