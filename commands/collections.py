@@ -118,19 +118,22 @@ def add_to_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
     
     with conn.cursor() as cur:
 # ------------Query Boundary ----------------------
-        res = -2
-        while res < 0:
-            temp = ""
-            if res == -2:
-                temp = input(f"Video game with name {vg_name} does not exist, double check that you spelled it correctly\n please choose a new name: ")
-            cur.execute(
-        '''
-        SELECT COALESCE((select v.vid from video_games v where v.title = %s), -1);
-        ''', 
-        (temp,))
-            res = cur.fetchone()[0]
-            vg_name = temp
-        vg_id = res
+        query = "SELECT COALESCE((select v.vid from video_games v where v.title = %s), -1);" 
+        datatype = "Video Game"
+        vg_id = data_nonexistant(conn, ctx, query, datatype, col_name)
+        # res = -2
+        # while res < 0:
+        #     temp = ""
+        #     if res == -2:
+        #         temp = input(f"Video game with name {vg_name} does not exist, double check that you spelled it correctly\n please choose a new name: ")
+        #     cur.execute(
+        # '''
+        # SELECT COALESCE((select v.vid from video_games v where v.title = %s), -1);
+        # ''', 
+        # (temp,))
+        #     res = cur.fetchone()[0]
+        #     vg_name = temp
+        # vg_id = res
 
         # print("vg_id = ", vg_id)
 # ------------Query Boundary ----------------------
@@ -386,7 +389,7 @@ def data_nonexistant(conn: psycopg.Connection, ctx: dict[str, Any], query, datat
         res = -2
         while res < 0:
             if res == -1:
-                temp = input(f"\n{datatype} does not exist. Please double check your spelling and capitals\n Enter name here: ")
+                args[0] = input(f"\n{datatype} does not exist. Please double check your spelling and capitals\n Enter name here: ")
             cur.execute(query, (args))
             res = cur.fetchone()[0]
         return res
