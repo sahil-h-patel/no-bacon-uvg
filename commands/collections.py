@@ -160,7 +160,15 @@ WHERE up.uid = %s -- Replace user_uid with the actual user's UID
             if res == -1:
                 print("You don't own this collection")
                 res = -2
-            
+# ------------Query Boundary ----------------------
+        # I may have forgotten to check if the video game is already in the collection
+        cur.execute('''
+            SELECT COALESCE((SELECT vid from collection_has_video_game where cid = %s and vid = %s), -1);
+        ''')
+        res = cur.fetchone[0]
+        if res != -1:
+            print(f"Collection {col_name} already has game {vg_name} in it :/")
+            return
 # ------------Query Boundary ----------------------
         cur.execute('''
 INSERT INTO collection_has_video_game (cid, vid)
@@ -207,7 +215,7 @@ def remove_from_collection(conn: psycopg.Connection, args: list[str], ctx: dict[
 ''', (col_name,))
 # ------------Query Boundary ----------------------
         col_id = cur.fetchone()  
-        print("col_name = ", col_id)
+        # print("col_name = ", col_id)
         if not col_id:
             print("Collection does not exist")
             return
@@ -235,7 +243,7 @@ def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
 ''', (col_name,))
 # ------------Query Boundary ----------------------
         col_id = cur.fetchone() 
-        print("col_name = ", col_id)
+        # print("col_name = ", col_id)
         if not col_id:
             print("Collection does not exist")
             return
