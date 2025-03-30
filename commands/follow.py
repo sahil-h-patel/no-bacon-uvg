@@ -117,3 +117,19 @@ def unfollow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
                 AND followee_uid = %s;''', (ctx['uid'], followee[0]))
     conn.commit()
     print("User unfollowed")
+
+def count_users_you_follow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
+    with conn.cursor() as cur:
+        cur.execute('''
+        SELECT COALESCE((SELECT count(follower_uid) from follows where follower_uid = %s), 0);
+''', (ctx["uid"],))
+        return cur.fetchone()[0]
+    return 
+
+def count_followers(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
+    with conn.cursor() as cur:
+        cur.execute('''
+        SELECT COALESCE((SELECT count(followee_uid) from follows where followee_uid = %s), 0);
+''', (ctx["uid"],))
+        return cur.fetchone()[0]
+    return 
