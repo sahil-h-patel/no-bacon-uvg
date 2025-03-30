@@ -120,23 +120,9 @@ def add_to_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
 # ------------Query Boundary ----------------------
         query = "SELECT COALESCE((select v.vid from video_games v where v.title = %s), -1);" 
         datatype = "Video Game"
-        vg_id = data_nonexistant(conn, ctx, query, datatype, col_name)
-        # res = -2
-        # while res < 0:
-        #     temp = ""
-        #     if res == -2:
-        #         temp = input(f"Video game with name {vg_name} does not exist, double check that you spelled it correctly\n please choose a new name: ")
-        #     cur.execute(
-        # '''
-        # SELECT COALESCE((select v.vid from video_games v where v.title = %s), -1);
-        # ''', 
-        # (temp,))
-        #     res = cur.fetchone()[0]
-        #     vg_name = temp
-        # vg_id = res
-
-        # print("vg_id = ", vg_id)
+        vg_id = data_nonexistant(conn, ctx, query, datatype, vg_name)
 # ------------Query Boundary ----------------------
+        # Making sure the User has the Platform for the game
         cur.execute('''
 SELECT CASE 
            WHEN COUNT(*) > 0 THEN 'User has the platform for the video game'
@@ -154,43 +140,27 @@ WHERE up.uid = %s -- Replace user_uid with the actual user's UID
             if userAnswer != "y":
                 return
 # ------------Query Boundary ----------------------
-        cur.execute('''
-            SELECT cid
-            FROM collection
-            WHERE name = %s;
-        ''', (col_name,))
-# ------------Query Boundary ----------------------
-        col_id = cur.fetchone()
-        # print("col_id = ", col_id)
-        if not col_id:
-            print("Collection does not exist")
-            return
-        col_id = col_id[0]
-        # print("col_id = ", col_id)
+        query = "SELECT cid FROM collection WHERE name = %s"
+        datatype = "Collection"
+        col_id = data_nonexistant(conn, ctx, query, datatype, col_name)
+
+#   Making sure the User owns the Collection
         res = -1
         while res < 0:
             if res == -2:
-                
-                col_name = input("Input new Collection Name:")
-                cur.execute('''
-                    SELECT cid
-                    FROM collection
-                    WHERE name = %s;
-                ''', (col_name,))
-                col_id = cur.fetchone()
-                if not col_id:
-                    print("Collection does not exist")
-                    return
-                col_id = col_id[0]
-
+                col_name = input("Input a new Collection Name: ")
+                query = "SELECT cid FROM collection WHERE name = %s"
+                datatype = "Collection"     
+                col_id = data_nonexistant(conn, ctx, query, datatype, col_name)
+            # print(f"col_id = {col_id}")
             cur.execute('''
                 SELECT COALESCE((SELECT uid from user_has_collection where uid = %s and cid = %s), -1);
             ''', (ctx["uid"], col_id))
-            temp = cur.fetchone()[0]
-            if temp == -1:
+            res = cur.fetchone()[0]
+            if res == -1:
                 print("You don't own this collection")
                 res = -2
-
+            
 # ------------Query Boundary ----------------------
         cur.execute('''
 INSERT INTO collection_has_video_game (cid, vid)
@@ -386,11 +356,19 @@ def describe_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str
 
 def data_nonexistant(conn: psycopg.Connection, ctx: dict[str, Any], query, datatype, *args):
     with conn.cursor() as cur:
+        # print(f"query, datatype, *args = {query}, {datatype}, *{args}")
         res = -2
         while res < 0:
             if res == -1:
-                args[0] = input(f"\n{datatype} does not exist. Please double check your spelling and capitals\n Enter name here: ")
-            cur.execute(query, (args))
-            res = cur.fetchone()[0]
+                temp = input(f"\n{datatype} does not exist. Please double check your spelling and capitals\n Enter name here: ")
+                args = list(args)
+                args[0] = temp
+                args = tuple(args)
+            cur.execute(query, args)
+            res = cur.fetchone()
+            if not res:
+                res = -1
+                continue
+            res = res[0]
         return res
                 
