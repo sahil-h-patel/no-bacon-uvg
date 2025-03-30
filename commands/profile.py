@@ -18,16 +18,23 @@ def profile(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
         you_follow = count_users_you_follow(conn, args, ctx)
         print(f"You Follow {you_follow} many Users, and {followers} follow you\n")
         print("Your top 10 Video Games by Playtime")
-            # SELECT v.title from video_games
-            #         LEFT JOIN user_has_video_game uhvg on v.vid = uhvg.vid
-            #     where uhvg.uid = %s 
-        # Realizing that a User doesn't have a video game and thats just not in the schema so every user needs to have a collection that holds their video games
+
         cur.execute('''
-                    
-            SELECT u.username, f.follower_uid, followee_uid from users u
-                JOIN follows f on f.followee_uid = u.uid
-                JOIN users u2 on f.follower_uid = u2.uid
-            WHERE f.followee_uid = %s ORDER BY u.last_access LIMIT 10;    
+SELECT 
+    vg.title AS video_game_title,
+    SUM(EXTRACT(EPOCH FROM (up.end_time - up.start_time))/3600) AS total_playtime_in_hours
+FROM 
+    user_plays up
+JOIN 
+    video_games vg ON up.vid = vg.vid
+WHERE 
+    up.uid = %s
+GROUP BY 
+    vg.title
+ORDER BY 
+    total_playtime_in_hours DESC
+LIMIT 10;
+
         ''', (ctx["uid"],))
 
         result = cur.fetchall()
@@ -35,6 +42,6 @@ def profile(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
         for res in result:
             print(f"\tVideo Game: {res[0]}; Playtime: {res[1]}")
         if not result:
-            print("Such empty, go make friends")
+            print("Such empty, go play games")
         print("\n")
         return
