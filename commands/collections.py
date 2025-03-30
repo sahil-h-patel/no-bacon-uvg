@@ -182,44 +182,45 @@ VALUES(%s, %s);
 def remove_from_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     # print(f"args: {args}")
     # print(f"ctx: {ctx}")
+    if len(args) < 1:
+        print(f"Usage: collection remove [Video Game Name]")
+        return
+    vg_name = " ".join(args)
+    if len(vg_name) > 64:
+        print("Video Game name should be less than 64 characters")
+        return
+    
     col_name = input("Collection Name: ")
     if len(col_name) > 64:
         print("Collection name should be less than 64 characters")
         return
 
-    vg_name = input("Video Game Name: ")
-    if len(vg_name) > 64:
-        print("Video Game name should be less than 64 characters")
-        return
-
     with conn.cursor() as cur:
 # ------------Query Boundary ----------------------
-        cur.execute('''
-    SELECT vid
-    FROM video_games
-    WHERE title = %s;
-    ''', (vg_name,))
+        query = "SELECT COALESCE((select v.vid from video_games v where v.title = %s), -1);" 
+        datatype = "Video Game"
+        vg_id = data_nonexistant(conn, ctx, query, datatype, vg_name)
 # ------------Query Boundary ----------------------
-        vg_id = cur.fetchone()
-        print("vg_id = ", vg_id)
-        if not vg_id:
-            print("Video Game does not exist")
-            return
-        vg_id = vg_id[0]
+        query = "SELECT cid FROM collection WHERE name = %s"
+        datatype = "Collection"
+        col_id = data_nonexistant(conn, ctx, query, datatype, col_name)
 
-# ------------Query Boundary ----------------------
-        cur.execute('''
-    SELECT cid
-    FROM collection
-    WHERE name = %s;
-''', (col_name,))
-# ------------Query Boundary ----------------------
-        col_id = cur.fetchone()  
-        # print("col_name = ", col_id)
-        if not col_id:
-            print("Collection does not exist")
-            return
-        col_id = col_id[0]
+#   Making sure the User owns the Collection
+        res = -1
+        while res < 0:
+            if res == -2:
+                col_name = input("Input a new Collection Name: ")
+                query = "SELECT cid FROM collection WHERE name = %s"
+                datatype = "Collection"     
+                col_id = data_nonexistant(conn, ctx, query, datatype, col_name)
+            # print(f"col_id = {col_id}")
+            cur.execute('''
+                SELECT COALESCE((SELECT uid from user_has_collection where uid = %s and cid = %s), -1);
+            ''', (ctx["uid"], col_id))
+            res = cur.fetchone()[0]
+            if res == -1:
+                print("You don't own this collection")
+                res = -2
 # ------------Query Boundary ----------------------
         cur.execute('''
     DELETE FROM collection_has_video_game WHERE cid = %s AND vid = %s
@@ -229,26 +230,36 @@ def remove_from_collection(conn: psycopg.Connection, args: list[str], ctx: dict[
 
 
 def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
-    col_name = input("Collection Name: ")
+    if len(args) < 1:
+        print(f"Usage: collection delete [Collection Name]")
+        return
+    col_name = " ".join(args)
     if len(col_name) > 64:
         print("Collection name should be less than 64 characters")
-        return
+        return 
 
     with conn.cursor() as cur:
 # ------------Query Boundary ----------------------
-        cur.execute('''
-    SELECT cid
-    FROM collection
-    WHERE name = %s;
-''', (col_name,))
-# ------------Query Boundary ----------------------
-        col_id = cur.fetchone() 
-        # print("col_name = ", col_id)
-        if not col_id:
-            print("Collection does not exist")
-            return
-        col_id = col_id[0]
-    
+        query = "SELECT cid FROM collection WHERE name = %s"
+        datatype = "Collection"
+        col_id = data_nonexistant(conn, ctx, query, datatype, col_name)
+
+#   Making sure the User owns the Collection
+        res = -1
+        while res < 0:
+            if res == -2:
+                col_name = input("Input a new Collection Name: ")
+                query = "SELECT cid FROM collection WHERE name = %s"
+                datatype = "Collection"     
+                col_id = data_nonexistant(conn, ctx, query, datatype, col_name)
+            # print(f"col_id = {col_id}")
+            cur.execute('''
+                SELECT COALESCE((SELECT uid from user_has_collection where uid = %s and cid = %s), -1);
+            ''', (ctx["uid"], col_id))
+            res = cur.fetchone()[0]
+            if res == -1:
+                print("You don't own this collection")
+                res = -2    
 # ------------Query Boundary ----------------------
         cur.execute(
         '''
@@ -262,30 +273,48 @@ def delete_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
     conn.commit()
 
 def rename_collection(conn: psycopg.Connection, args: list[str],  ctx: dict[str, Any]):
-    old_name = input("Old collection Name: ")
-    if len(old_name) > 64:
-        print("Collection name should be less than 64 characters")
+    if len(args) < 1:
+        print(f"Usage: collection rename [Collection Name]")
         return
-    new_name = input("New COllection Name:")
-    if len(old_name) > 64:
+    col_name = " ".join(args)
+    if len(col_name) > 64:
+        print("Collection name should be less than 64 characters")
+        return 
+    new_name = input("New Collection Name: ")
+    if len(new_name) > 64:
         print("Collection name should be less than 64 characters")
         return
     
     with conn.cursor() as cur:
 # ------------Query Boundary ----------------------
-        cur.execute('''
-    SELECT cid
-    FROM collection
-    WHERE name = %s;
-''', (old_name,))
-# ------------Query Boundary ----------------------
-        col_id = cur.fetchone()
-        # print("col_name = ", col_id)
-        if not col_id:
-            print("Collection does not exist")
-            return
-        col_id = col_id[0]
+        query = "SELECT cid FROM collection WHERE name = %s"
+        datatype = "Collection"
+        col_id = data_nonexistant(conn, ctx, query, datatype, col_name)
 
+#   Making sure the User owns the Collection
+        res = -1
+        while res < 0:
+            if res == -2:
+                col_name = input("Input a new Collection Name: ")
+                query = "SELECT cid FROM collection WHERE name = %s"
+                datatype = "Collection"     
+                col_id = data_nonexistant(conn, ctx, query, datatype, col_name)
+            # print(f"col_id = {col_id}")
+            cur.execute('''
+                SELECT COALESCE((SELECT uid from user_has_collection where uid = %s and cid = %s), -1);
+            ''', (ctx["uid"], col_id))
+            res = cur.fetchone()[0]
+            if res == -1:
+                print("You don't own this collection")
+                res = -2    
+        
+# ------------Query Boundary ----------------------
+        cur.execute('''SELECT COALESCE((SELECT cid from collection where name = %s),-1)''', (new_name,))
+        res = cur.fetchone()[0]
+        if res != -1:
+            print("unfortunately that name is taken")
+            return
+# ------------Query Boundary ----------------------
         cur.execute(
         '''
         UPDATE collection
@@ -293,7 +322,6 @@ def rename_collection(conn: psycopg.Connection, args: list[str],  ctx: dict[str,
         WHERE cid = %s;
         ''',
         (new_name, col_id))
-# ------------Query Boundary ----------------------
     print(f'Renamed collection to {new_name} successfully')
     conn.commit() 
 
@@ -326,9 +354,9 @@ def count_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, 
 
 def show_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     user_id = ctx['uid']  # Assuming the user ID is passed as the first argument
-    with conn.cursor() as curr:
+    with conn.cursor() as cur:
 # ------------Query Boundary ----------------------
-        curr.execute(
+        cur.execute(
         '''
         SELECT 
             c.name AS collection_name,
@@ -344,15 +372,53 @@ def show_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, A
         ''', 
         (user_id,))
 # ------------Query Boundary ----------------------
-        results = curr.fetchall()
+        results = cur.fetchall()
         for row in results:
             print(f"{row[0]} - {row[1]} video games - {row[2]} hours")
     return results
 
 
 def describe_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
-    
-    return ""
+    if len(args) < 1:
+        print(f"Usage: collection describe [Collection Name]")
+        return
+    col_name = " ".join(args)
+    if len(col_name) > 64:
+        print("Collection name should be less than 64 characters")
+        return 
+    with conn.cursor() as cur:
+# ------------Query Boundary ----------------------
+        query = "SELECT cid FROM collection WHERE name = %s"
+        datatype = "Collection"
+        col_id = data_nonexistant(conn, ctx, query, datatype, col_name)
+        print(f"{col_name}")
+# ------------Query Boundary ----------------------
+        # Finding all the video games
+        query = '''
+SELECT 
+    vg.title AS video_game_title,
+    COALESCE(EXTRACT(EPOCH FROM (up.end_time - up.start_time))/3600, 0) AS playtime_in_hours
+FROM 
+    collection c
+JOIN 
+    user_has_collection uhc ON c.cid = uhc.cid
+JOIN 
+    collection_has_video_game chvg ON c.cid = chvg.cid
+JOIN 
+    video_games vg ON chvg.vid = vg.vid
+LEFT JOIN 
+    user_plays up ON vg.vid = up.vid
+LEFT JOIN 
+    users u ON up.uid = u.uid
+WHERE 
+    c.cid = %s AND u.uid = %s; 
+        '''
+        cur.execute(query, (col_id, ctx["uid"]))
+        results = cur.fetchall()
+        if not results[0]:
+            print("No playtime in your games yet L bozo")
+        for row in results:
+            print(f"{row[0]} - {row[2]} hours")
 
 # def test(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
 #     query = "SELECT COALESCE((SELECT uid from user_has_collection where uid = %s and cid = %s), -1);"
