@@ -40,7 +40,7 @@ LIMIT 10;
         result = cur.fetchall()
         # print(result)
         for res in result:
-            print(f"\tVideo Game: {res[0]}; Playtime: {res[1]:2f}")
+            print(f"\tVideo Game: {res[0]}; Playtime: {res[1]:.2f}")
         if not result:
             print("Such empty, go play games")
         print("\n")
