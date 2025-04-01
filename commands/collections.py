@@ -374,7 +374,7 @@ def show_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, A
 # ------------Query Boundary ----------------------
         results = cur.fetchall()
         for row in results:
-            print(f"{row[0]} - {row[1]} video games - {row[2]:2f} hours")
+            print(f"{row[0]} - {row[1]} video games - {row[2]:.2f} hours")
     return results
 
 
@@ -409,7 +409,7 @@ select vg.title AS video_game_title,
         if len(results) == 0:
             print("No playtime in your games yet L bozo")
         for row in results:
-            print(f"{row[0]} - {row[1]:2f} hours")
+            print(f"{row[0]} - {row[1]:.2f} hours")
 
 # def test(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
 #     query = "SELECT COALESCE((SELECT uid from user_has_collection where uid = %s and cid = %s), -1);"
