@@ -11,7 +11,7 @@ def collection(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     # print(f"args: {args}")
     # print(f"ctx: {ctx}")
     if len(args) == 0:
-        print("collection [create|delete|add|remove|show|count|rename]")
+        print("collection [create|delete|add|remove|show|count|rename|describe]")
         return
     if "uid" not in ctx:
         print("You are not logged in")
@@ -164,8 +164,8 @@ WHERE up.uid = %s -- Replace user_uid with the actual user's UID
         # I may have forgotten to check if the video game is already in the collection
         cur.execute('''
             SELECT COALESCE((SELECT vid from collection_has_video_game where cid = %s and vid = %s), -1);
-        ''')
-        res = cur.fetchone[0]
+        ''', (col_id, vg_id))
+        res = cur.fetchone()[0]
         if res != -1:
             print(f"Collection {col_name} already has game {vg_name} in it :/")
             return
@@ -374,7 +374,7 @@ def show_collections(conn: psycopg.Connection, args: list[str], ctx: dict[str, A
 # ------------Query Boundary ----------------------
         results = cur.fetchall()
         for row in results:
-            print(f"{row[0]} - {row[1]} video games - {row[2]} hours")
+            print(f"{row[0]} - {row[1]} video games - {row[2]:2f} hours")
     return results
 
 
@@ -395,30 +395,21 @@ def describe_collection(conn: psycopg.Connection, args: list[str], ctx: dict[str
 # ------------Query Boundary ----------------------
         # Finding all the video games
         query = '''
-SELECT 
-    vg.title AS video_game_title,
+select vg.title AS video_game_title,
     COALESCE(EXTRACT(EPOCH FROM (up.end_time - up.start_time))/3600, 0) AS playtime_in_hours
-FROM 
-    collection c
-JOIN 
-    user_has_collection uhc ON c.cid = uhc.cid
-JOIN 
-    collection_has_video_game chvg ON c.cid = chvg.cid
-JOIN 
-    video_games vg ON chvg.vid = vg.vid
-LEFT JOIN 
-    user_plays up ON vg.vid = up.vid
-LEFT JOIN 
-    users u ON up.uid = u.uid
-WHERE 
-    c.cid = %s AND u.uid = %s; 
+    from user_has_collection uhc
+        JOIN collection c on uhc.cid = c.cid
+        JOIN collection_has_video_game chvg ON c.cid = chvg.cid
+        JOIN video_games vg on chvg.vid = vg.vid
+        JOIN user_plays up ON vg.vid = up.vid
+    WHERE up.uid = %s AND c.name = %s;
         '''
-        cur.execute(query, (col_id, ctx["uid"]))
+        cur.execute(query, (ctx["uid"], col_name))
         results = cur.fetchall()
-        if not results[0]:
+        if len(results) == 0:
             print("No playtime in your games yet L bozo")
         for row in results:
-            print(f"{row[0]} - {row[2]} hours")
+            print(f"{row[0]} - {row[1]:2f} hours")
 
 # def test(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
 #     query = "SELECT COALESCE((SELECT uid from user_has_collection where uid = %s and cid = %s), -1);"
