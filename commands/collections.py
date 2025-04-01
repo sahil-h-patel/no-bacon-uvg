@@ -222,6 +222,41 @@ def remove_from_collection(conn: psycopg.Connection, args: list[str], ctx: dict[
                 print("You don't own this collection")
                 res = -2
 # ------------Query Boundary ----------------------
+        query = '''SELECT COALESCE(( 
+        SELECT v.vid from video_games v 
+            JOIN collection_has_video_game chvg ON chvg.vid = v.vid
+            JOIN collection c ON c.cid = chvg.cid
+        WHERE v.title = %s AND c.cid = %s
+        ),-1)'''
+        datatype = "Video Game is not in your Collection"
+        temp_args = (vg_name, col_id)
+        with conn.cursor() as cur:
+            # print(f"query, datatype, *args = {query}, {datatype}, *{args}")   
+            res = -2
+            while res < 0:
+                if res == -1:
+                    cur.execute("SELECT count(*) from collection_has_video_game where cid = %s", (col_id,))
+                    result = cur.fetchone()[0]
+                    if result == 0:
+                        print("\nThere are no video games in your collection")
+                        return
+                        
+                    temp = input(f"\n{datatype}. Please double check your spelling and capitals\n Enter name here: ")
+                    temp_args = list(temp_args)
+                    temp_args[0] = temp
+                    temp_args = tuple(temp_args)
+
+                cur.execute(query, temp_args)
+                res = cur.fetchone()
+                if not res:
+                    res = -1
+                    continue
+                res = res[0]
+            return res
+                
+
+# ------------Query Boundary ----------------------
+
         cur.execute('''
     DELETE FROM collection_has_video_game WHERE cid = %s AND vid = %s
             ''', (col_id, vg_id))
@@ -436,4 +471,3 @@ def data_nonexistant(conn: psycopg.Connection, ctx: dict[str, Any], query, datat
                 continue
             res = res[0]
         return res
-                
