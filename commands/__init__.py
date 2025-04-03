@@ -6,3 +6,4 @@ from .play import play, play_random
 from .rate import rate
 from .follow import follow, unfollow
 from .profile import profile
+from .platform import platform
