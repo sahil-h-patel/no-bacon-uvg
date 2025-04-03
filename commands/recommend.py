@@ -7,7 +7,6 @@ def top_20_rolling(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any
     if (len(args) != 0):
         print("usage: top_20_rolling")
         return
-    print(date.today() - timedelta(days=90))
 
     with conn.cursor() as cur:
         cur.execute('''
@@ -21,16 +20,18 @@ def top_20_rolling(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any
                 video_games AS vg
             WHERE
                 start_time > %s
+                AND end_time <= %s
                 AND up.vid = vg.vid
             GROUP BY
                 up.vid, vg.title, vg.vid
             ORDER BY
-                total DESC''', (date.today() - timedelta(days=90),))
+                total DESC''', (date.today() - timedelta(days=90), date.today()))
         
-        print("Top 20 Games of the Last 90 Days:")
-        print("---------------------------------")
         result = cur.fetchall()
+        print("Top "+ str(min(len(result), 20)) +" Games of the Last 90 Days:")
+        print("---------------------------------")
         for i in range(20):
+            if(len(result) == i): break
             print(str(i+1) + ":\t" + result[i][2])
 
 def top_20_followers(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
@@ -75,16 +76,18 @@ def top_5_releases_month(conn: psycopg.Connection, args: list[str], ctx: dict[st
                 video_games AS vg
             WHERE
                 start_time > %s
+                AND end_time <= %s
                 AND up.vid = vg.vid
             GROUP BY
                 up.vid, vg.title, vg.vid
             ORDER BY
-                total DESC''', (date.today().replace(day=1) - timedelta(days=30),))
+                total DESC''', (date.today().replace(day=1) - timedelta(days=1), date.today()))
         
-        print(calendar.month_name[date.today().month] + "'s Top 5 Games:")
-        print("----------------------")
         result = cur.fetchall()
+        print(calendar.month_name[date.today().month] + "'s Top " + str(min(len(result), 5)) + " Games:")
+        print("----------------------")
         for i in range(5):
+            if(len(result) == i): break
             print(str(i+1) + ":\t" + result[i][2])
 
 def for_you(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
