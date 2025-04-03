@@ -64,6 +64,7 @@ def top_5_releases_month(conn: psycopg.Connection, args: list[str], ctx: dict[st
         print("usage: top_5_monthly")
         return
 
+    today = date.today()
     with conn.cursor() as cur:
         cur.execute('''
             SELECT
@@ -81,7 +82,7 @@ def top_5_releases_month(conn: psycopg.Connection, args: list[str], ctx: dict[st
             GROUP BY
                 up.vid, vg.title, vg.vid
             ORDER BY
-                total DESC''', (date.today().replace(day=1) - timedelta(days=1), date.today()))
+                total DESC''', (today.replace(day=1) - timedelta(days=1), today.replace(day=calendar.monthrange(today.year, today.month)[1])))
         
         result = cur.fetchall()
         print(calendar.month_name[date.today().month] + "'s Top " + str(min(len(result), 5)) + " Games:")
