@@ -78,6 +78,11 @@ def platform_remove(conn: psycopg.Connection, args: list[str], ctx: dict[str, An
             ''', (ctx["uid"], pl_id))
             res = cur.fetchone()[0]
             if res == -1:
+                cur.execute('''SELECT count(*) from user_platform where uid = %s''', (ctx["uid"],))
+                temp = cur.fetchone()[0]
+                if temp == 0:
+                    print("You don't own any Platforms")
+                    return
                 print("You don't own this Platform")
                 res = -2
         # ------------Query Boundary ----------------------
