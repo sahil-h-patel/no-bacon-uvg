@@ -63,7 +63,7 @@ def top_5_releases_month(conn: psycopg.Connection, args: list[str], ctx: dict[st
     if (len(args) != 0):
         print("usage: top_5_monthly")
         return
-
+    
     today = date.today()
     with conn.cursor() as cur:
         cur.execute('''
@@ -71,18 +71,23 @@ def top_5_releases_month(conn: psycopg.Connection, args: list[str], ctx: dict[st
                 up.vid,
                 vg.vid,
                 vg.title,
+                up.end_time,
+                up.start_time,
                 SUM(end_time - start_time) AS total
             FROM
                 user_plays AS up,
                 video_games AS vg
             WHERE
-                start_time > %s
-                AND end_time <= %s
-                AND up.vid = vg.vid
+                up.vid = vg.vid
+                AND 
+                ((start_time >= %s AND start_time <= %s) OR (end_time >= %s AND end_time <= %s))
             GROUP BY
-                up.vid, vg.title, vg.vid
+                up.vid, vg.title, vg.vid, up.end_time, up.start_time
             ORDER BY
-                total DESC''', (today.replace(day=1) - timedelta(days=1), today.replace(day=calendar.monthrange(today.year, today.month)[1])))
+                total DESC''', (today.replace(day=1), 
+                                today.replace(day=calendar.monthrange(today.year, today.month)[1]),
+                                today.replace(day=1), 
+                                today.replace(day=calendar.monthrange(today.year, today.month)[1])))
         
         result = cur.fetchall()
         print(calendar.month_name[date.today().month] + "'s Top " + str(min(len(result), 5)) + " Games:")
