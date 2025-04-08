@@ -6,6 +6,7 @@ import psycopg
 import os
 import sshtunnel as ssh
 import atexit
+from psycopg.types import array
 
 from commands import (
     example, 
@@ -86,8 +87,9 @@ def setup_db_conn():
         f"host={db_host} port={tunnel.local_bind_port} dbname={
             db_name} user={db_user} password={db_password}"
     )
+    array.register_all_arrays(db_conn)
     print("Successfully connected to the database!")
-
+    
     with db_conn.cursor() as cur:
         cur.execute("SELECT * FROM users")
         version = cur.fetchone()
@@ -106,6 +108,7 @@ def main():
     if not db_conn or not tunnel:
         print("Failed to establish connection with DB")
         return
+    
 
     prompt()
     for cmd in stdin:
