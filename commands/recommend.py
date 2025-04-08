@@ -37,7 +37,6 @@ def top_20_followers(conn: psycopg.Connection, args: list[str], ctx: dict[str, A
     if(len(args) != 0):
         print("usage: top_20_followers")
         return
-    uid = int(ctx['uid'])
 
     with conn.cursor() as cur:
         cur.execute('''
@@ -51,7 +50,7 @@ def top_20_followers(conn: psycopg.Connection, args: list[str], ctx: dict[str, A
             JOIN video_games vg ON up.vid = vg.vid
             WHERE u.uid = %s
             GROUP BY vg.vid, vg.title
-            ORDER BY total DESC;''', (uid,))
+            ORDER BY total DESC;''', (ctx['uid'],))
         
         print("Top 20 Games Among My Followers:")
         print("---------------------------------")
@@ -89,4 +88,43 @@ def top_5_releases_month(conn: psycopg.Connection, args: list[str], ctx: dict[st
             print(str(i+1) + ":\t" + result[i][2])
 
 def for_you(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
-    pass
+    if(len(args) != 0):
+        print("usage: for_you")
+        return
+    
+    with conn.cursor() as cur:
+        cur.execute('''
+        WITH total_playtime AS (
+            SELECT v.vid, v.title, SUM(up.end_time - up.start_time) as total
+            FROM user_plays up
+            JOIN video_games v on up.vid = v.vid
+            WHERE up.uid = 1922
+            GROUP BY v.title, v.vid
+            ORDER BY total DESC)
+        SELECT
+            tp.title,
+            STRING_AGG(DISTINCT g.genre, ', ') as genres,
+            STRING_AGG(DISTINCT dev.name, ', ') as developers,
+            STRING_AGG(DISTINCT pub.name, ', ') as publishers
+        FROM total_playtime tp
+        LEFT JOIN video_game_genre vgg on vgg.vid = tp.vid
+        LEFT JOIN genre g on g.gid = vgg.gid
+        LEFT JOIN video_game_developer vgd on vgd.vid = tp.vid
+        LEFT JOIN contributor dev on dev.dpid = vgd.dpid
+        LEFT JOIN video_game_publisher vgpub on vgpub.vid = tp.vid
+        LEFT JOIN contributor pub on pub.dpid = vgpub.dpid
+        GROUP BY tp.title, tp.vid, tp.total
+        ORDER BY tp.total DESC;''')
+
+        # print(f"Fetchone: {cur.fetchone()}\n\n")
+        # print(f"Fetchall: {cur.fetchall()}\n\n")
+
+        for row in cur.fetchall():
+            row.index()
+        # genre = cur.fetchone()[1].split(', ')
+        # print(f"Genre: {genre}")
+        # devs = cur.fetchone()[2].split(', ')
+        # print(f"Developers: {devs}")
+        # pubs = cur.fetchone()[3].split(', ')
+        # print(f"Publishers: {pubs}")
+
