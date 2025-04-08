@@ -24,6 +24,7 @@ from commands import (
     top_5_releases_month,
     top_20_rolling,
     top_20_followers,
+    for_you
 )
 
 PROMPT = "nbuvg> "
@@ -44,7 +45,8 @@ CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]]
     "platform": platform,
     "top_5_monthly" : top_5_releases_month,
     "top_20_rolling" : top_20_rolling,
-    "top_20_followers" : top_20_followers
+    "top_20_followers" : top_20_followers,
+    "for_you": for_you
 }
 
 CONTEXT: dict[str, Any] = {}
