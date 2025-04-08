@@ -7,6 +7,7 @@ def top_20_rolling(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any
     if (len(args) != 0):
         print("usage: top_20_rolling")
         return
+    print(date.today() - timedelta(days=90))
 
     with conn.cursor() as cur:
         cur.execute('''
@@ -20,18 +21,16 @@ def top_20_rolling(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any
                 video_games AS vg
             WHERE
                 start_time > %s
-                AND end_time <= %s
                 AND up.vid = vg.vid
             GROUP BY
                 up.vid, vg.title, vg.vid
             ORDER BY
-                total DESC''', (date.today() - timedelta(days=90), date.today()))
+                total DESC''', (date.today() - timedelta(days=90),))
         
-        result = cur.fetchall()
-        print("Top "+ str(min(len(result), 20)) +" Games of the Last 90 Days:")
+        print("Top 20 Games of the Last 90 Days:")
         print("---------------------------------")
+        result = cur.fetchall()
         for i in range(20):
-            if(len(result) == i): break
             print(str(i+1) + ":\t" + result[i][2])
 
 def top_20_followers(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
@@ -63,37 +62,29 @@ def top_5_releases_month(conn: psycopg.Connection, args: list[str], ctx: dict[st
     if (len(args) != 0):
         print("usage: top_5_monthly")
         return
-    
-    today = date.today()
+
     with conn.cursor() as cur:
         cur.execute('''
             SELECT
                 up.vid,
                 vg.vid,
                 vg.title,
-                up.end_time,
-                up.start_time,
                 SUM(end_time - start_time) AS total
             FROM
                 user_plays AS up,
                 video_games AS vg
             WHERE
-                up.vid = vg.vid
-                AND 
-                ((start_time >= %s AND start_time <= %s) OR (end_time >= %s AND end_time <= %s))
+                start_time > %s
+                AND up.vid = vg.vid
             GROUP BY
-                up.vid, vg.title, vg.vid, up.end_time, up.start_time
+                up.vid, vg.title, vg.vid
             ORDER BY
-                total DESC''', (today.replace(day=1), 
-                                today.replace(day=calendar.monthrange(today.year, today.month)[1]),
-                                today.replace(day=1), 
-                                today.replace(day=calendar.monthrange(today.year, today.month)[1])))
+                total DESC''', (date.today().replace(day=1) - timedelta(days=30),))
         
-        result = cur.fetchall()
-        print(calendar.month_name[date.today().month] + "'s Top " + str(min(len(result), 5)) + " Games:")
+        print(calendar.month_name[date.today().month] + "'s Top 5 Games:")
         print("----------------------")
+        result = cur.fetchall()
         for i in range(5):
-            if(len(result) == i): break
             print(str(i+1) + ":\t" + result[i][2])
 
 def for_you(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
@@ -128,12 +119,10 @@ def for_you(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
         # print(f"Fetchone: {cur.fetchone()}\n\n")
         # print(f"Fetchall: {cur.fetchall()}\n\n")
 
-        for row in cur.fetchall():
-            row.index()
+        # for row in cur.fetchall():
         # genre = cur.fetchone()[1].split(', ')
         # print(f"Genre: {genre}")
         # devs = cur.fetchone()[2].split(', ')
         # print(f"Developers: {devs}")
         # pubs = cur.fetchone()[3].split(', ')
         # print(f"Publishers: {pubs}")
-
