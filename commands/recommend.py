@@ -94,35 +94,88 @@ def for_you(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     
     with conn.cursor() as cur:
         cur.execute('''
-        WITH total_playtime AS (
-            SELECT v.vid, v.title, SUM(up.end_time - up.start_time) as total
-            FROM user_plays up
-            JOIN video_games v on up.vid = v.vid
-            WHERE up.uid = 1922
-            GROUP BY v.title, v.vid
-            ORDER BY total DESC)
-        SELECT
-            tp.title,
-            STRING_AGG(DISTINCT g.genre, ', ') as genres,
-            STRING_AGG(DISTINCT dev.name, ', ') as developers,
-            STRING_AGG(DISTINCT pub.name, ', ') as publishers
-        FROM total_playtime tp
-        LEFT JOIN video_game_genre vgg on vgg.vid = tp.vid
-        LEFT JOIN genre g on g.gid = vgg.gid
-        LEFT JOIN video_game_developer vgd on vgd.vid = tp.vid
-        LEFT JOIN contributor dev on dev.dpid = vgd.dpid
-        LEFT JOIN video_game_publisher vgpub on vgpub.vid = tp.vid
-        LEFT JOIN contributor pub on pub.dpid = vgpub.dpid
-        GROUP BY tp.title, tp.vid, tp.total
-        ORDER BY tp.total DESC;''')
+            WITH total_playtime AS (
+                SELECT v.vid, v.title, SUM(up.end_time - up.start_time) as total
+                FROM user_plays up
+                JOIN video_games v on up.vid = v.vid
+                WHERE up.uid = %s
+                GROUP BY v.title, v.vid
+                ORDER BY total DESC),
+            avg_rating AS (
+                SELECT
+                    ur.vid,
+                    AVG(ur.rating) as average_rating
+                FROM user_rating ur
+                GROUP BY ur.vid
+            )
+            SELECT
+                tp.title,
+                STRING_AGG(DISTINCT g.genre, ', ') as genres,
+                STRING_AGG(DISTINCT dev.name, ', ') as developers,
+                STRING_AGG(DISTINCT pub.name, ', ') as publishers,
+                STRING_AGG(DISTINCT p.name, ', ') as platforms,
+                ar.average_rating
+            FROM total_playtime tp
+            LEFT JOIN video_game_genre vgg on vgg.vid = tp.vid
+            LEFT JOIN genre g on g.gid = vgg.gid
+            LEFT JOIN video_game_developer vgd on vgd.vid = tp.vid
+            LEFT JOIN contributor dev on dev.dpid = vgd.dpid
+            LEFT JOIN video_game_publisher vgpub on vgpub.vid = tp.vid
+            LEFT JOIN contributor pub on pub.dpid = vgpub.dpid
+            LEFT JOIN video_game_platforms vgp on vgp.vid = tp.vid
+            LEFT JOIN platform p on p.pid = vgp.pid
+            LEFT JOIN avg_rating ar on ar.vid = tp.vid
+            GROUP BY tp.title, tp.vid, tp.total, ar.average_rating
+            ORDER BY tp.total DESC;''', (ctx['uid'],))
 
-        # print(f"Fetchone: {cur.fetchone()}\n\n")
-        # print(f"Fetchall: {cur.fetchall()}\n\n")
+        def parse_to_list(s):
+            if not s:
+                return ["none"]
+            # Convert to list if it's not already
+            return list(x.strip() for x in s.split(', '))
+        
+        user_games = cur.fetchall()
+        for game in user_games:
+            title, genres, developers, publishers, platforms, rating = game
+            genre_list = parse_to_list(genres)
+            dev_list = parse_to_list(developers)
+            pub_list = parse_to_list(publishers)
+            plat_list = parse_to_list(platforms)
 
-        # for row in cur.fetchall():
-        # genre = cur.fetchone()[1].split(', ')
-        # print(f"Genre: {genre}")
-        # devs = cur.fetchone()[2].split(', ')
-        # print(f"Developers: {devs}")
-        # pubs = cur.fetchone()[3].split(', ')
-        # print(f"Publishers: {pubs}")
+            if all(x == ["none"] for x in [genre_list, dev_list, pub_list, plat_list]):
+                continue  # skip if this game doesn't have enough metadata
+
+            cur.execute('''
+                SELECT DISTINCT vg.title, AVG(ur.rating) AS average_rating
+                    FROM video_games vg
+                    LEFT JOIN video_game_genre vgg ON vg.vid = vgg.vid
+                    LEFT JOIN genre g ON g.gid = vgg.gid
+                    LEFT JOIN video_game_developer vgd ON vgd.vid = vg.vid
+                    LEFT JOIN contributor dev ON dev.dpid = vgd.dpid
+                    LEFT JOIN video_game_publisher vgpub ON vgpub.vid = vg.vid
+                    LEFT JOIN contributor pub ON pub.dpid = vgpub.dpid
+                    LEFT JOIN video_game_platforms vgp ON vgp.vid = vg.vid
+                    LEFT JOIN platform p ON p.pid = vgp.pid
+                    LEFT JOIN user_rating ur ON ur.vid = vg.vid
+                    WHERE vg.vid NOT IN (
+                        SELECT DISTINCT vid FROM user_plays WHERE uid = %s
+                    )
+                    AND (
+                        g.genre = ANY(%s) OR
+                        dev.name = ANY(%s) OR
+                        pub.name = ANY(%s) OR
+                        p.name = ANY(%s)
+                    )
+                    GROUP BY vg.vid, vg.title
+                    HAVING AVG(ur.rating) >= %s
+                    ORDER BY average_rating DESC
+                    LIMIT 5;''', (ctx['uid'], 
+                                  genre_list, 
+                                  dev_list,
+                                  pub_list,
+                                  plat_list,
+                                  rating))
+            result = cur.fetchall()
+            for i in range(min(len(result), 5)):  # Avoid index error if less than 5 results
+                rating_display = f"(avg rating {result[i][1]:.2f})" if result[i][1] is not None else "(no ratings)"
+                print(f"Recommended based on '{title}': {result[i][0]} {rating_display}")
