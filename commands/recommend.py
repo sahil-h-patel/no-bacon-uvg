@@ -126,7 +126,9 @@ def for_you(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
             LEFT JOIN platform p on p.pid = vgp.pid
             LEFT JOIN avg_rating ar on ar.vid = tp.vid
             GROUP BY tp.title, tp.vid, tp.total, ar.average_rating
-            ORDER BY tp.total DESC;''', (ctx['uid'],))
+            ORDER BY tp.total DESC
+            LIMIT 5;
+            ''', (ctx['uid'],))
 
         def parse_to_list(s):
             if not s:
@@ -144,7 +146,11 @@ def for_you(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
 
             if all(x == ["none"] for x in [genre_list, dev_list, pub_list, plat_list]):
                 continue  # skip if this game doesn't have enough metadata
-
+            
+            recommendation_title = f"        RECOMMENDATIONS BASED OFF {title.upper()}           "
+            line = '-' * len(recommendation_title)
+            print(recommendation_title)
+            print(line)
             cur.execute('''
                 SELECT DISTINCT vg.title, AVG(ur.rating) AS average_rating
                     FROM video_games vg
@@ -167,15 +173,15 @@ def for_you(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
                         p.name = ANY(%s)
                     )
                     GROUP BY vg.vid, vg.title
-                    HAVING AVG(ur.rating) >= %s
-                    ORDER BY average_rating DESC
-                    LIMIT 5;''', (ctx['uid'], 
+                    HAVING AVG(ur.rating) > %s
+                    LIMIT 2;''', (ctx['uid'], 
                                   genre_list, 
                                   dev_list,
                                   pub_list,
                                   plat_list,
                                   rating))
+            
             result = cur.fetchall()
-            for i in range(min(len(result), 5)):  # Avoid index error if less than 5 results
+            for i in range(min(len(result), 2)):  # Avoid index error if less than 5 results
                 rating_display = f"(avg rating {result[i][1]:.2f})" if result[i][1] is not None else "(no ratings)"
-                print(f"Recommended based on '{title}': {result[i][0]} {rating_display}")
+                print(f"{result[i][0]} {rating_display}\n")
