@@ -133,3 +133,24 @@ def count_followers(conn: psycopg.Connection, args: list[str], ctx: dict[str, An
 ''', (ctx["uid"],))
         return cur.fetchone()[0]
     return 
+
+def top_vg_from_you_follow(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
+    if 'uid' not in ctx:
+        print("must be logged in to use this command")
+        return
+    with conn.cursor() as cur:
+        cur.execute('''
+SELECT vg.title, ur.rating from users u
+JOIN follows f ON f.follower_uid = u.uid
+JOIN user_rating ur ON ur.uid = followee_uid
+JOIN video_games vg ON ur.vid = vg.vid
+WHERE u.uid = %s
+GROUP BY vg.title, ur.rating
+ORDER BY ur.rating DESC
+LIMIT 20;
+     ''', (ctx['uid'],))
+        results = cur.fetchall()
+        print("These are the top games from people you follow !")
+        for res in results:
+            print(f"title: {res[0]:<40}| Rating: {res[1]:<5}")
+        return
