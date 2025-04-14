@@ -39,7 +39,7 @@ def platform_add(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any])
         # ------------Query Boundary ----------------------
         # Check that platform exists
         datatype = "Platform"
-        query = "SELECT COALESCE((select p.pid from platform p where p.name = %s), -1);"
+        query = "SELECT COALESCE((select p.pid from platform p where p.name = %s LIMIT 1), -1);"
         pl_id = data_nonexistant(conn, ctx, query, datatype, pl_name)
         print(pl_id," ",    ctx["uid"])
         if pl_id >= 0:
@@ -47,6 +47,7 @@ def platform_add(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any])
                 INSERT INTO user_platform (uid, pid)
                 VALUES (%s, %s); ''', (ctx["uid"], pl_id))
             print(f"You now own {pl_name}!")
+    conn.commit()
         
 
 
@@ -92,6 +93,8 @@ def platform_remove(conn: psycopg.Connection, args: list[str], ctx: dict[str, An
             ''', (ctx["uid"], pl_id))
             print("Platform successfully removed")
             return
+    conn.commit()
+        
         
 def platform_show(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
     if len(args) > 0:
