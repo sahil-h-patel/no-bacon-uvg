@@ -461,6 +461,7 @@ def data_nonexistant(conn: psycopg.Connection, ctx: dict[str, Any], query, datat
         while res < 0:
             if res == -1:
                 temp = input(f"\n{datatype} does not exist. Please double check your spelling and capitals\n Enter name here: ")
+                print (temp)
                 args = list(args)
                 args[0] = temp
                 args = tuple(args)
