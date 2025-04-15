@@ -139,6 +139,12 @@ def top_vg_from_you_follow(conn: psycopg.Connection, args: list[str], ctx: dict[
         print("must be logged in to use this command")
         return
     with conn.cursor() as cur:
+        cur.execute('''SELECT COALESCE((SELECT count(follower_uid) from follows where follower_uid = %s), 0);
+''', (ctx["uid"],))
+        num = cur.fetchone()[0]
+        if num == 0:
+            print("You are not following anyone, go follow people by their email! with command \n>follow [email]")
+            return
         cur.execute('''
 SELECT vg.title, ur.rating from users u
 JOIN follows f ON f.follower_uid = u.uid
