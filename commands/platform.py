@@ -41,7 +41,7 @@ def platform_add(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any])
         datatype = "Platform"
         query = "SELECT COALESCE((select p.pid from platform p where p.name = %s LIMIT 1), -1);"
         pl_id = data_nonexistant(conn, ctx, query, datatype, pl_name)
-        print(pl_id," ",    ctx["uid"])
+        # print(pl_id," ",    ctx["uid"])
         if pl_id >= 0:
             cur.execute('''
                 INSERT INTO user_platform (uid, pid)
@@ -92,7 +92,6 @@ def platform_remove(conn: psycopg.Connection, args: list[str], ctx: dict[str, An
             DELETE FROM user_platform WHERE uid = %s AND pid = %s;
             ''', (ctx["uid"], pl_id))
             print("Platform successfully removed")
-            return
     conn.commit()
         
         
