@@ -37,8 +37,18 @@ def top_20_followers(conn: psycopg.Connection, args: list[str], ctx: dict[str, A
     if(len(args) != 0):
         print("usage: top_20_followers")
         return
-
+    
     with conn.cursor() as cur:
+        cur.execute('''
+                    SELECT COALESCE((SELECT count(follower_uid) 
+                    FROM follows 
+                    WHERE follower_uid = %s), 0);
+                    ''', (ctx["uid"],))
+        
+        if (cur.fetchone()[0] == 0):
+            print("Insufficient followers played to make recommendations")
+            return
+
         cur.execute('''
             SELECT
                 vg.vid,
@@ -88,6 +98,9 @@ def top_5_releases_month(conn: psycopg.Connection, args: list[str], ctx: dict[st
             print(str(i+1) + ":\t" + result[i][2])
 
 def for_you(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
+    if 'uid' not in ctx:
+        print("must be logged in to use this command")
+        return
     if(len(args) != 0):
         print("usage: for_you")
         return
@@ -137,6 +150,11 @@ def for_you(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
             return list(x.strip() for x in s.split(', '))
         
         user_games = cur.fetchall()
+
+        if (len(user_games)==0):
+            print("Insufficient games played to make recommendations")
+            return
+        
         for game in user_games:
             title, genres, developers, publishers, platforms, rating = game
             genre_list = parse_to_list(genres)
