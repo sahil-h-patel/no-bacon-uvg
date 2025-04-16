@@ -34,10 +34,12 @@ def top_20_rolling(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any
             print(str(i+1) + ":\t" + result[i][2])
 
 def top_20_followers(conn: psycopg.Connection, args: list[str], ctx: dict[str, Any]):
+    if 'uid' not in ctx:
+        print("User not logged in.")
+        return
     if(len(args) != 0):
         print("usage: top_20_followers")
         return
-    
     with conn.cursor() as cur:
         cur.execute('''
                     SELECT COALESCE((SELECT count(follower_uid) 
