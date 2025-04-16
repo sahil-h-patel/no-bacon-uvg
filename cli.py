@@ -6,6 +6,7 @@ import psycopg
 import os
 import sshtunnel as ssh
 import atexit
+from psycopg.types import array
 
 from commands import (
     example, 
@@ -20,7 +21,11 @@ from commands import (
     rate,
     search,
     profile,
-    platform
+    platform,
+    top_5_releases_month,
+    top_20_rolling,
+    top_20_followers,
+    for_you
 )
 
 PROMPT = "nbuvg> "
@@ -38,7 +43,11 @@ CMDS: dict[str, Callable[[psycopg.Connection, list[str], dict[str, Any]], None]]
     "unfollow": unfollow,
     "create_account": create_account,
     "profile": profile,
-    "platform": platform
+    "platform": platform,
+    "top_5_monthly" : top_5_releases_month,
+    "top_20_rolling" : top_20_rolling,
+    "top_20_followers" : top_20_followers,
+    "for_you": for_you
 }
 
 CONTEXT: dict[str, Any] = {}
@@ -78,8 +87,9 @@ def setup_db_conn():
         f"host={db_host} port={tunnel.local_bind_port} dbname={
             db_name} user={db_user} password={db_password}"
     )
+    array.register_all_arrays(db_conn)
     print("Successfully connected to the database!")
-
+    
     with db_conn.cursor() as cur:
         cur.execute("SELECT * FROM users")
         version = cur.fetchone()
@@ -98,6 +108,7 @@ def main():
     if not db_conn or not tunnel:
         print("Failed to establish connection with DB")
         return
+    
 
     prompt()
     for cmd in stdin:
